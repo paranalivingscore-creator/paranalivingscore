@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ranking - Paraná Living Score</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <header>
+        <div class="container">
+            <h1>Paraná Living <span>Score</span></h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Início</a></li>
+                    <li><a href="ranking.html" class="active">Ranking</a></li>
+                    <li><a href="sobre.html">Sobre</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="ranking-header">
+            <h2>Melhores Cidades do Paraná</h2>
+            <p>Classificação baseada em indicadores reais e análise de IA.</p>
+
+            <!-- Filtros Rápidos -->
+            <div class="filters">
+                <span>Filtrar por:</span>
+                <button class="filter-btn active">Geral</button>
+                <button class="filter-btn">Segurança</button>
+                <button class="filter-btn">Educação</button>
+                <button class="filter-btn">Emprego</button>
+            </div>
+        </section>
+
+        <!-- Podium: Top 3 Cidades -->
+        <section class="podium">
+            <div class="podium-item second">
+                <div class="medal">2º</div>
+                <h3>Maringá</h3>
+                <span class="podium-score">92.5</span>
+            </div>
+            <div class="podium-item first">
+                <div class="medal">1º</div>
+                <i class="fas fa-crown"></i>
+                <h3>Curitiba</h3>
+                <span class="podium-score">94.8</span>
+            </div>
+            <div class="podium-item third">
+                <div class="medal">3º</div>
+                <h3>Cascavel</h3>
+                <span class="podium-score">89.2</span>
+            </div>
+        </section>
+
+        <!-- Tabela Completa -->
+        <section class="ranking-list">
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th>Posição</th>
+                        <th>Cidade</th>
+                        <th>Educação</th>
+                        <th>Segurança</th>
+                        <th>Saúde</th>
+                        <th>Score Final</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>4º</td>
+                        <td><strong>Londrina</strong></td>
+                        <td>8.5</td>
+                        <td>7.9</td>
+                        <td>8.8</td>
+                        <td class="td-score">88.1</td>
+                        <td><button class="btn-view">Ver mais</button></td>
+                    </tr>
+                    <tr>
+                        <td>5º</td>
+                        <td><strong>Toledo</strong></td>
+                        <td>9.1</td>
+                        <td>8.2</td>
+                        <td>8.0</td>
+                        <td class="td-score">87.5</td>
+                        <td><button class="btn-view">Ver mais</button></td>
+                    </tr>
+                    <tr>
+                        <td>6º</td>
+                        <td><strong>Foz do Iguaçu</strong></td>
+                        <td>7.8</td>
+                        <td>6.5</td>
+                        <td>8.2</td>
+                        <td class="td-score">82.0</td>
+                        <td><button class="btn-view">Ver mais</button></td>
+                    </tr>
+                    <tr>
+                        <td>7º</td>
+                        <td><strong>Assis Chateaubriand</strong></td>
+                        <td>8.5</td>
+                        <td>9.2</td>
+                        <td>7.8</td>
+                        <td class="td-score">81.4</td>
+                        <td><button class="btn-view">Ver mais</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 - Projeto Integrador IFPR Assis Chateaubriand</p>
+    </footer>
+    <script src="script.js"></script>
+</body>
+
+</html>

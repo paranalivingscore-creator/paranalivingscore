@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paraná Living Score - Inteligência Urbana</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>Paraná Living <span>Score</span></h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html" class="active">Início</a></li>
+                    <li><a href="ranking.html">Ranking</a></li>
+                    <li><a href="sobre.html">Sobre</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Seção Principal (Hero) -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Onde morar no Paraná? <br><span>A IA responde.</span></h1>
+                <p>Analisamos milhares de dados oficiais para calcular a qualidade de vida real de cada cidade
+                    paranaense.</p>
+
+                <div class="search-container">
+                    <div class="search-input-wrapper">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="citySearch" placeholder="Ex: Maringá, Toledo, Curitiba...">
+                    </div>
+                    <button class="btn-main">Analisar com IA</button>
+                </div>
+
+                <div class="hero-badges">
+                    <span><i class="fas fa-check-circle"></i> Dados do IBGE</span>
+                    <span><i class="fas fa-check-circle"></i> Fontes Oficiais</span>
+                    <span><i class="fas fa-check-circle"></i> Relatórios em Tempo Real</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Como Funciona -->
+    <section class="how-it-works container">
+        <div class="section-title">
+            <h2>Como chegamos ao Score?</h2>
+            <p>Nossa inteligência artificial cruza 4 pilares fundamentais</p>
+        </div>
+
+        <div class="process-grid">
+            <div class="process-card">
+                <div class="icon-circle"><i class="fas fa-database"></i></div>
+                <h3>Coleta</h3>
+                <p>Extraímos indicadores de segurança, saúde, educação e economia de bases públicas.</p>
+            </div>
+            <div class="process-card">
+                <div class="icon-circle"><i class="fas fa-calculator"></i></div>
+                <h3>Cálculo</h3>
+                <p>Algoritmos matemáticos ponderam cada dado para gerar uma nota de 0 a 100.</p>
+            </div>
+            <div class="process-card">
+                <div class="icon-circle"><i class="fas fa-brain"></i></div>
+                <h3>Análise IA</h3>
+                <p>Uma IA generativa interpreta os números e escreve um relatório detalhado para você.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categorias em Destaque -->
+    <section class="categories-preview">
+        <div class="container">
+            <div class="categories-grid">
+                <div class="cat-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <h4>Segurança</h4>
+                </div>
+                <div class="cat-item">
+                    <i class="fas fa-graduation-cap"></i>
+                    <h4>Educação</h4>
+                </div>
+                <div class="cat-item">
+                    <i class="fas fa-briefcase"></i>
+                    <h4>Empregos</h4>
+                </div>
+                <div class="cat-item">
+                    <i class="fas fa-hospital"></i>
+                    <h4>Saúde</h4>
+                </div>
+                <div class="cat-item">
+                    <i class="fas fa-leaf"></i>
+                    <h4>Saneamento</h4>
+                </div>
+                <div class="cat-item">
+                    <i class="fas fa-coins"></i>
+                    <h4>Custo de Vida</h4>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Carrossel Estilo Ranking Premium -->
+    <section class="ranking-premium">
+        <div id="premiumCarousel" class="premium-container">
+            <!-- O conteúdo será injetado pelo JavaScript para permitir a transição -->
+            <div class="premium-overlay">
+                <div class="container">
+                    <div class="premium-content">
+                        <div class="premium-header">
+                            <div class="medal-wrapper">
+                                <img src="https://cdn-icons-png.flaticon.com/512/179/179249.png" alt="Medalha"
+                                    class="medal-img">
+                            </div>
+                            <h2 id="p-titulo">1º Curitiba</h2>
+                            <div class="badge-grade" id="p-grade">A</div>
+                        </div>
+                        <p id="p-descricao">
+                            Curitiba é a capital do estado brasileiro do Paraná, localizado a 934 metros de altitude no
+                            Primeiro Planalto Paranaense...
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controles discretos -->
+        <div class="premium-controls">
+            <button onclick="prevPremium()"><i class="fas fa-chevron-left"></i></button>
+            <button onclick="nextPremium()"><i class="fas fa-chevron-right"></i></button>
+        </div>
+    </section>
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 - Projeto Integrador IFPR Assis Chateaubriand</p>
+            <div class="footer-links">
+                <a href="#">Dados Abertos</a>
+                <a href="sobre.html">Equipe</a>
+            </div>
+        </div>
+    </footer>
+    <script src="script.js"></script>
+</body>
+
+</html>
