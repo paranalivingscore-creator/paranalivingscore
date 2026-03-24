@@ -108,35 +108,41 @@
             </div>
         </div>
     </section>
+
     <!-- Carrossel Estilo Ranking Premium -->
     <section class="ranking-premium">
         <div id="premiumCarousel" class="premium-container">
-            <!-- O conteúdo será injetado pelo JavaScript para permitir a transição -->
             <div class="premium-overlay">
                 <div class="container">
-                    <div class="premium-content">
+                    <div class="premium-content" id="premiumContent" style="display: none;">
+                        <!-- Escondido até carregar -->
                         <div class="premium-header">
                             <div class="medal-wrapper">
                                 <img src="https://cdn-icons-png.flaticon.com/512/179/179249.png" alt="Medalha"
                                     class="medal-img">
                             </div>
-                            <h2 id="p-titulo">1º Curitiba</h2>
-                            <div class="badge-grade" id="p-grade">A</div>
+                            <h2 id="p-titulo">Carregando...</h2>
+                            <div class="badge-grade" id="p-grade">-</div>
                         </div>
-                        <p id="p-descricao">
-                            Curitiba é a capital do estado brasileiro do Paraná, localizado a 934 metros de altitude no
-                            Primeiro Planalto Paranaense...
-                        </p>
+                        <p id="p-descricao">Buscando dados oficiais do estado do Paraná...</p>
                     </div>
+                    <!-- Opcional: Um loader visual aqui -->
+                    <div id="loader" class="loader">Aguarde, processando dados...</div>
                 </div>
             </div>
         </div>
 
-        <!-- Controles discretos -->
         <div class="premium-controls">
             <button onclick="prevPremium()"><i class="fas fa-chevron-left"></i></button>
             <button onclick="nextPremium()"><i class="fas fa-chevron-right"></i></button>
         </div>
+    </section>
+
+    <!-- Controles discretos -->
+    <div class="premium-controls">
+        <button onclick="prevPremium()"><i class="fas fa-chevron-left"></i></button>
+        <button onclick="nextPremium()"><i class="fas fa-chevron-right"></i></button>
+    </div>
     </section>
     <footer>
         <div class="container">
@@ -148,6 +154,7 @@
         </div>
     </footer>
     <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </body>
 
 </html>

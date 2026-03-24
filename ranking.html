@@ -39,23 +39,22 @@
             </div>
         </section>
 
-        <!-- Podium: Top 3 Cidades -->
         <section class="podium">
             <div class="podium-item second">
                 <div class="medal">2º</div>
-                <h3>Maringá</h3>
-                <span class="podium-score">92.5</span>
+                <h3 id="pos2-nome">---</h3>
+                <span class="podium-score" id="pos2-score">00.0</span>
             </div>
             <div class="podium-item first">
                 <div class="medal">1º</div>
                 <i class="fas fa-crown"></i>
-                <h3>Curitiba</h3>
-                <span class="podium-score">94.8</span>
+                <h3 id="pos1-nome">---</h3>
+                <span class="podium-score" id="pos1-score">00.0</span>
             </div>
             <div class="podium-item third">
                 <div class="medal">3º</div>
-                <h3>Cascavel</h3>
-                <span class="podium-score">89.2</span>
+                <h3 id="pos3-nome">---</h3>
+                <span class="podium-score" id="pos3-score">00.0</span>
             </div>
         </section>
 
@@ -73,43 +72,8 @@
                         <th>Ações</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>4º</td>
-                        <td><strong>Londrina</strong></td>
-                        <td>8.5</td>
-                        <td>7.9</td>
-                        <td>8.8</td>
-                        <td class="td-score">88.1</td>
-                        <td><button class="btn-view">Ver mais</button></td>
-                    </tr>
-                    <tr>
-                        <td>5º</td>
-                        <td><strong>Toledo</strong></td>
-                        <td>9.1</td>
-                        <td>8.2</td>
-                        <td>8.0</td>
-                        <td class="td-score">87.5</td>
-                        <td><button class="btn-view">Ver mais</button></td>
-                    </tr>
-                    <tr>
-                        <td>6º</td>
-                        <td><strong>Foz do Iguaçu</strong></td>
-                        <td>7.8</td>
-                        <td>6.5</td>
-                        <td>8.2</td>
-                        <td class="td-score">82.0</td>
-                        <td><button class="btn-view">Ver mais</button></td>
-                    </tr>
-                    <tr>
-                        <td>7º</td>
-                        <td><strong>Assis Chateaubriand</strong></td>
-                        <td>8.5</td>
-                        <td>9.2</td>
-                        <td>7.8</td>
-                        <td class="td-score">81.4</td>
-                        <td><button class="btn-view">Ver mais</button></td>
-                    </tr>
+                <tbody id="rankingTableBody">
+                    <!-- O JAVASCRIPT VAI INSERIR AS LINHAS AQUI -->
                 </tbody>
             </table>
         </section>
