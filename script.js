@@ -1,27 +1,76 @@
-// 1. CONFIGURAÇÃO SUPABASE (Substitua pelos seus dados do painel do Supabase)
-const SUPABASE_URL = 'https://fmtaijkuidmfladqqgxd.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtdGFpamt1aWRtZmxhZHFxZ3hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwNDY5MTMsImV4cCI6MjA4NzYyMjkxM30.vQXL97T4xWkoOOkiRPc8PIhMrrhOZgFSvdWTYv87KlE';
-const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+/**
+ * PARANÁ LIVING SCORE - Script Principal
+ * Este script controla a interface e busca dados do nosso servidor Node.js
+ */
 
-// Variável global para armazenar as cidades após o carregamento
+// URL do seu servidor local (Back-end)
+const API_URL = 'http://localhost:3000/api';
+
+// Variáveis globais para controle de interface
 let cidadesGlobais = [];
+let cidadesDestaque = [];
+let itemAtual = 0;
 
-// --- FUNÇÃO DE BUSCA DE DADOS REAIS ---
-async function carregarDados() {
-    console.log("Buscando dados no Supabase...");
-    const { data, error } = await _supabase
-        .from('cidades') // Nome da sua tabela no Supabase
-        .select('*')
-        .order('pib_per_capita', { ascending: false });
+// --- 1. FUNÇÕES DE BUSCA (CONEXÃO COM O BACK-END) ---
 
-    if (error) {
-        console.error('Erro ao buscar cidades:', error);
+/**
+ * Busca a lista completa de cidades para o Ranking
+ */
+async function carregarTodasCidades() {
+    try {
+        console.log("Buscando cidades no servidor...");
+        const response = await fetch(`${API_URL}/cidades`);
+        if (!response.ok) throw new Error("Erro ao carregar ranking");
+        return await response.json();
+    } catch (error) {
+        console.error('Erro na API:', error);
         return [];
     }
-    return data;
 }
 
-// --- LÓGICA DA BUSCA (Página Inicial) ---
+/**
+ * Busca uma cidade específica pelo nome (usado na lupa de busca)
+ */
+async function buscarCidadePorNome(nome) {
+    try {
+        const response = await fetch(`${API_URL}/cidades/busca/${nome}`);
+        if (!response.ok) {
+            if (response.status === 404) return null;
+            throw new Error("Erro na busca");
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Erro ao buscar cidade:', error);
+        return null;
+    }
+}
+
+// --- 2. CÁLCULO DO SCORE (LÓGICA DO PFC) ---
+
+/**
+ * Calcula o Living Score baseado em pesos (Média Ponderada)
+ */
+function calcularScore(c) {
+    // Pegando indicadores (caso não existam, assume 0)
+    const ideb = c.indicadores?.ideb || 0;
+    const seguranca = c.indicadores?.seguranca_indice || 0;
+    const saude = c.indicadores?.saude_leitos || 0;
+    const pib = c.indicadores?.pib_per_capita || 0;
+
+    // Normalização básica para escala 0-100
+    const nEdu = ideb * 10;
+    const nSeg = seguranca;
+    const nSau = Math.min((saude / 5) * 100, 100); // 5 leitos por 1k hab = nota 100
+    const nEco = Math.min((pib / 60000) * 100, 100); // 60k PIB = nota 100
+
+    // Pesos: Segurança(4), Educação(3), Saúde(2), Economia(1)
+    const scoreFinal = ((nSeg * 4) + (nEdu * 3) + (nSau * 2) + (nEco * 1)) / 10;
+
+    return scoreFinal.toFixed(1);
+}
+
+// --- 3. LÓGICA DA BUSCA (PÁGINA INICIAL) ---
+
 const btnBusca = document.querySelector('.btn-main');
 const inputBusca = document.querySelector('#citySearch');
 
@@ -34,21 +83,21 @@ if (btnBusca) {
             return;
         }
 
-        btnBusca.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analisando...';
+        btnBusca.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analisando com IA...';
         btnBusca.disabled = true;
 
-        // Busca no Banco de Dados pelo nome exato (ou similar)
-        const { data, error } = await _supabase
-            .from('cidades')
-            .select('*')
-            .ilike('nome', termoBusca) // Busca sem diferenciar maiúsculas/minúsculas
-            .single();
+        const cidade = await buscarCidadePorNome(termoBusca);
 
-        if (data) {
-            alert(`📍 Cidade: ${data.nome}\n📈 PIB per Capita: R$ ${data.pib_per_capita}\n🎓 IDEB: ${data.ideb}\n🤖 Relatório IA: ${data.descricao_base || 'Processando análise...'}`);
-            // Futuramente: Redirecionar para página de detalhes
+        if (cidade) {
+            // Exemplo de como mostrar o resultado. 
+            // Dica: Você pode criar um modal ou redirecionar para uma página de detalhes.
+            alert(`
+                📍 Cidade: ${cidade.nome}
+                ⭐ Living Score: ${calcularScore(cidade)}
+                🤖 Análise da IA: ${cidade.relatorio_ia || 'Análise sendo gerada...'}
+            `);
         } else {
-            alert("Cidade não encontrada na base de dados do Paraná.");
+            alert("Cidade não encontrada na nossa base oficial do Paraná.");
         }
 
         btnBusca.innerHTML = 'Analisar com IA';
@@ -56,49 +105,42 @@ if (btnBusca) {
     });
 }
 
-// --- LÓGICA DO RANKING (Tabela) ---
+// --- 4. LÓGICA DO RANKING E CARROSSEL ---
+
+/**
+ * Renderiza a tabela de ranking
+ */
 async function renderizarRanking() {
     const tableBody = document.getElementById('rankingTableBody');
     if (!tableBody) return;
 
     tableBody.innerHTML = '<tr><td colspan="7">Carregando dados oficiais...</td></tr>';
 
-    const cidades = await carregarDados();
-    cidadesGlobais = cidades; // Salva para uso nos carrosséis
+    const cidades = await carregarTodasCidades();
+    cidadesGlobais = cidades;
 
     tableBody.innerHTML = ''; // Limpa o carregando
 
     cidades.forEach((cidade, index) => {
-        const scoreFinal = calcularScore(cidade);
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${index + 1}º</td>
             <td><strong>${cidade.nome}</strong></td>
-            <td>${cidade.ideb || '--'}</td>
-            <td>${cidade.seguranca_indice || '--'}</td>
-            <td>${cidade.saude_leitos || '--'}</td>
-            <td class="td-score">${scoreFinal}</td>
-            <td><button class="btn-view" onclick="alert('Detalhes de ${cidade.nome} em breve!')">Ver mais</button></td>
+            <td>${cidade.indicadores?.ideb || '--'}</td>
+            <td>${cidade.indicadores?.seguranca_indice || '--'}</td>
+            <td>${cidade.indicadores?.saude_leitos || '--'}</td>
+            <td class="td-score">${calcularScore(cidade)}</td>
+            <td><button class="btn-view" onclick="alert('Relatório IA: ${cidade.relatorio_ia}')">Ver mais</button></td>
         `;
         tableBody.appendChild(tr);
     });
 
-    // Após carregar o ranking, inicializa os carrosséis com dados reais
     inicializarCarrosseis(cidades);
 }
 
-// Função simples para calcular o score (vocês podem melhorar a fórmula)
-function calcularScore(c) {
-    const p1 = (c.ideb || 0) * 10;
-    const p2 = (c.seguranca_indice || 0);
-    const p3 = (c.pib_per_capita / 1000) || 0;
-    return ((p1 + p2 + p3) / 3).toFixed(1);
-}
-
-// --- CARROSSEL PREMIUM (Destaque) ---
-let itemAtual = 0;
-let cidadesDestaque = [];
-
+/**
+ * Controla o carrossel premium da Home
+ */
 function atualizarCarrosselPremium() {
     if (cidadesDestaque.length === 0) return;
 
@@ -106,16 +148,19 @@ function atualizarCarrosselPremium() {
     const container = document.getElementById('premiumCarousel');
 
     if (container) {
-        container.style.backgroundImage = `url('${info.imagem_url || 'https://via.placeholder.com/1600x900'}')`;
+        // Se tiver imagem no banco usa ela, senão usa uma padrão
+        const img = info.imagem_url || 'https://images.unsplash.com/photo-1544735168-19e34070a758?auto=format&fit=crop&w=1600&q=80';
+        container.style.backgroundImage = `url('${img}')`;
+
         document.getElementById('p-titulo').innerText = `${itemAtual + 1}º ${info.nome}`;
-        document.getElementById('p-grade').innerText = info.ideb > 6 ? 'A' : 'B';
-        document.getElementById('p-descricao').innerText = info.descricao_base || "Dados em análise pela nossa IA...";
+        document.getElementById('p-grade').innerText = calcularScore(info) > 80 ? 'A' : 'B';
+        document.getElementById('p-descricao').innerText = info.relatorio_ia || "Nossa IA está analisando os indicadores desta cidade...";
 
         const badge = document.getElementById('p-grade');
-        badge.style.background = info.ideb > 6 ? "#6ab04c" : "#f0932b";
+        badge.style.background = calcularScore(info) > 80 ? "#10b981" : "#f59e0b";
 
-        // Mostra o conteúdo (que estava hidden)
         document.querySelector('.premium-content').style.display = 'block';
+        if (document.getElementById('loader')) document.getElementById('loader').style.display = 'none';
     }
 }
 
@@ -129,35 +174,21 @@ function prevPremium() {
     atualizarCarrosselPremium();
 }
 
-// --- INICIALIZAÇÃO GERAL ---
-async function inicializarCarrosseis(cidades) {
-    // Premium: Pega as 3 primeiras cidades
-    cidadesDestaque = cidades.slice(0, 3);
+/**
+ * Prepara os dados para os carrosséis
+ */
+function inicializarCarrosseis(cidades) {
+    cidadesDestaque = cidades.slice(0, 3); // Top 3 para o Premium
     atualizarCarrosselPremium();
-
-    // Carrossel Simples (Track)
-    const track = document.getElementById('carouselTrack');
-    if (track) {
-        track.innerHTML = ''; // Limpa o mock
-        cidades.forEach((cidade, index) => {
-            const li = document.createElement('li');
-            li.className = 'carousel-card';
-            li.innerHTML = `
-                <div class="rank-number">#${index + 1}</div>
-                <h3>${cidade.nome}</h3>
-                <div class="score">${calcularScore(cidade)}</div>
-                <p>Qualidade de Vida</p>
-            `;
-            track.appendChild(li);
-        });
-    }
 }
 
-// --- EVENTOS AO CARREGAR A PÁGINA ---
-window.addEventListener('DOMContentLoaded', () => {
-    renderizarRanking(); // Isso dispara toda a cadeia de carregamento de dados
+// --- 5. INICIALIZAÇÃO AO CARREGAR PÁGINA ---
 
-    // Intervalo para o carrossel premium
+window.addEventListener('DOMContentLoaded', () => {
+    // Tenta renderizar o ranking se estiver na página de ranking
+    renderizarRanking();
+
+    // Intervalo de troca automática do carrossel premium
     setInterval(nextPremium, 8000);
 });
 
