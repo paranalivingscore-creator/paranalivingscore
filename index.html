@@ -27,30 +27,74 @@
     </header>
 
     <!-- Seção Principal (Hero) -->
+    <!-- Seção Hero -->
     <section class="hero">
         <div class="container">
-            <div class="hero-content">
-                <h1>Onde morar no Paraná? <br><span>A IA responde.</span></h1>
-                <p>Analisamos milhares de dados oficiais para calcular a qualidade de vida real de cada cidade
-                    paranaense.</p>
-
-                <div class="search-container">
-                    <div class="search-input-wrapper">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="citySearch" placeholder="Ex: Maringá, Toledo, Curitiba...">
-                    </div>
-                    <button class="btn-main">Analisar com IA</button>
+            <h1>Onde morar no Paraná? <br><span>A IA responde.</span></h1>
+            <div class="search-container">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="citySearch" placeholder="Ex: Maringá, Toledo...">
                 </div>
-
-                <div class="hero-badges">
-                    <span><i class="fas fa-check-circle"></i> Dados do IBGE</span>
-                    <span><i class="fas fa-check-circle"></i> Fontes Oficiais</span>
-                    <span><i class="fas fa-check-circle"></i> Relatórios em Tempo Real</span>
-                </div>
+                <button class="btn-main">Analisar com IA</button>
             </div>
         </div>
     </section>
 
+    <!-- RESULTADO DA BUSCA (Dashboard) -->
+    <section id="resultadoBusca" class="container" style="display: none; margin-top: 40px; margin-bottom: 40px;">
+        <div class="card" style="border-top: 5px solid #2563eb; padding: 30px; background: white; border-radius: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 id="res-nome-cidade" style="font-size: 2rem;">Nome da Cidade</h2>
+                <span class="badge-ia"
+                    style="background: #dcfce7; color: #166534; padding: 5px 15px; border-radius: 20px; font-weight: bold;">
+                    <i class="fas fa-robot"></i> Inteligência Artificial Ativa
+                </span>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card score-card" style="text-align: center;">
+                    <h4>Living Score</h4>
+                    <div id="res-score" style="font-size: 4rem; font-weight: 800; color: #2563eb;">0.0</div>
+                </div>
+                <div class="card ai-report">
+                    <h3>Veredito da IA</h3>
+                    <p id="res-ia-texto" style="font-style: italic; color: #475569;">Carregando análise...</p>
+                </div>
+            </div>
+
+            <div class="indicators-grid" style="margin-top: 20px;">
+                <div class="ind-card">
+                    <i class="fas fa-graduation-cap"></i>
+                    <h4>Educação</h4>
+                    <span id="res-ideb">0.0</span>
+                </div>
+                <div class="ind-card">
+                    <i class="fas fa-shield-alt"></i>
+                    <h4>Segurança</h4>
+                    <span id="res-seguranca">0</span>
+                </div>
+                <div class="ind-card">
+                    <i class="fas fa-hospital"></i>
+                    <h4>Saúde</h4>
+                    <span id="res-saude">0.0</span>
+                </div>
+                <div class="ind-card">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <h4>Economia</h4>
+                    <span id="res-pib">R$ 0</span>
+                </div>
+                <div id="resultado-ia" class="card" style="display:none;">
+                    <div class="clima-badge">
+                        <span id="temp-valor">--</span>°C
+                        <img id="clima-icone" src="" alt="clima">
+                        <small id="clima-desc">--</small>
+                    </div>
+
+
+                </div>
+            </div>
+    </section>
     <!-- Como Funciona -->
     <section class="how-it-works container">
         <div class="section-title">

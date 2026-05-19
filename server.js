@@ -1,120 +1,127 @@
-/**
- * PARANÁ LIVING SCORE - BACKEND OFICIAL
- * Tecnologias: Node.js, Express, MongoDB, Google Gemini IA
- */
-
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const Cidade = require('./models/Cidade');
+const axios = require('axios');
 
 const app = express();
-
-// --- CONFIGURAÇÕES ---
 app.use(cors());
 app.use(express.json());
 
-// Configuração da IA Gemini (A chave deve estar no seu arquivo .env)
+// 1. MODELO DE DADOS
+const CidadeSchema = new mongoose.Schema({
+    ibge_id: Number,
+    nome: String,
+    indicadores: {
+        pib_per_capita: { type: Number, default: 0 },
+        ideb: { type: Number, default: 0 },
+        seguranca_indice: { type: Number, default: 0 },
+        saude_leitos: { type: Number, default: 0 },
+        taxa_emprego: { type: Number, default: 0 },
+        transporte_publico: { type: Number, default: 0 }
+    },
+    info_curadoria: { type: String, default: "" },
+    relatorio_ia: { type: String, default: "" }
+});
+const Cidade = mongoose.model('Cidade', CidadeSchema);
+
+// 2. CONEXÃO MONGODB
+mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log("✅ MongoDB Conectado com sucesso!"))
+    .catch(err => console.error("❌ Erro ao conectar no MongoDB:", err));
+
+// 3. CONFIGURAÇÃO DA IA (USANDO GEMINI-PRO PARA EVITAR 404)
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
 
-// --- CONEXÃO COM O MONGODB ---
-// Usando o link que funcionou nos seus testes
-const MONGO_URI = "mongodb+srv://admin:admin12345@cluster0.9oqgya9.mongodb.net/ParanaLivingScore?retryWrites=true&w=majority";
-
-console.log('⏳ Tentando conectar ao MongoDB...');
-mongoose.connect(MONGO_URI)
-    .then(() => console.log('✅ CONECTADO AO MONGODB COM SUCESSO!'))
-    .catch(err => console.error('❌ ERRO DE CONEXÃO:', err.message));
-
-// ============================================================
-// ROTAS DA API
-// ============================================================
-
-/**
- * ROTA 1: Teste de Funcionamento
- */
-app.get('/', (req, res) => {
-    res.send('API Paraná Living Score está online! 🚀');
-});
-
-/**
- * ROTA 2: Buscar todas as cidades (Para o Ranking)
- */
-app.get('/api/cidades', async (req, res) => {
-    try {
-        // Busca todas as cidades e ordena pelo Score (do maior para o menor)
-        const cidades = await Cidade.find().sort({ score_geral: -1 });
-        res.json(cidades);
-    } catch (error) {
-        res.status(500).json({ erro: "Erro ao buscar ranking", detalhes: error.message });
-    }
-});
-
-/**
- * ROTA 3: Buscar cidade por nome + GERAR RELATÓRIO IA (A MAIS IMPORTANTE)
- */
+// 4. ROTA DE BUSCA PÚBLICA (Lê a memória do Admin)
 app.get('/api/cidades/busca/:nome', async (req, res) => {
     try {
         const nomeCidade = req.params.nome;
-        
-        // Busca no banco (ignora maiúsculas e minúsculas)
         let cidade = await Cidade.findOne({ nome: new RegExp(`^${nomeCidade}$`, 'i') });
 
-        if (!cidade) {
-            return res.status(404).json({ erro: "Cidade não encontrada no banco oficial." });
+        if (!cidade) return res.status(404).json({ erro: "Cidade não encontrada" });
+
+        // --- NOVIDADE: BUSCANDO CLIMA EM TEMPO REAL (Serviço em Nuvem) ---
+        let climaDados = null;
+        try {
+            const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${nomeCidade},BR&units=metric&lang=pt_br&appid=${process.env.WEATHER_API_KEY}`;
+            const weatherRes = await axios.get(weatherUrl);
+            climaDados = {
+                temp: Math.round(weatherRes.data.main.temp),
+                descricao: weatherRes.data.weather[0].description,
+                icone: weatherRes.data.weather[0].icon,
+                umidade: weatherRes.data.main.humidity
+            };
+        } catch (errWeather) {
+            console.error("Erro ao buscar clima:", errWeather.message);
         }
 
-        // --- LÓGICA DA INTELIGÊNCIA ARTIFICIAL ---
-        // Só chamamos o Gemini se a cidade ainda não tiver um relatório pronto
-        const precisaDeIA = !cidade.relatorio_ia || 
-                           cidade.relatorio_ia === "Análise pendente pela IA..." || 
-                           cidade.relatorio_ia === "Aguardando processamento da IA...";
-
-        if (precisaDeIA) {
-            console.log(`🤖 IA está gerando relatório para: ${cidade.nome}...`);
-
-            try {
-                const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-                
-                // O Prompt (instruções para a IA)
-                const prompt = `Analise a qualidade de vida da cidade de ${cidade.nome}/PR. 
-                                Considere os seguintes indicadores reais: 
-                                - IDEB (Educação): ${cidade.indicadores.ideb}
-                                - Segurança (Nota): ${cidade.indicadores.seguranca_indice}/100
-                                - Saúde (Leitos por 1k hab): ${cidade.indicadores.saude_leitos}
-                                
-                                Escreva um relatório curto (máximo 120 palavras). 
-                                Destaque um ponto forte, um ponto fraco e dê um veredito final para quem quer morar lá. 
-                                Use um tom profissional e acolhedor.`;
-
-                const result = await model.generateContent(prompt);
-                const response = await result.response;
-                const textoIA = response.text();
-
-                // Salva o relatório gerado no banco de dados (assim não gasta créditos na próxima vez)
-                cidade.relatorio_ia = textoIA;
-                await cidade.save();
-                
-                console.log(`✅ Relatório salvo para ${cidade.nome}`);
-            } catch (errorIA) {
-                console.error("❌ Erro ao chamar Gemini:", errorIA.message);
-                cidade.relatorio_ia = "Não foi possível gerar o relatório da IA no momento.";
-            }
+        // --- LÓGICA DA IA (Mantém a que já tínhamos) ---
+        if (!cidade.relatorio_ia || cidade.relatorio_ia.includes("Aguardando")) {
+            console.log(`🤖 IA gerando relatório para: ${cidade.nome}...`);
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const prompt = `Analise a qualidade de vida em ${cidade.nome}/PR. PIB: ${cidade.indicadores.pib_per_capita}, IDEB: ${cidade.indicadores.ideb}. Seja breve.`;
+            const result = await model.generateContent(prompt);
+            cidade.relatorio_ia = (await result.response).text();
+            await cidade.save();
         }
 
-        // Retorna a cidade completa (dados + texto da IA) para o seu site
-        res.json(cidade);
+        // --- RESPOSTA FINAL (Dados do Banco + Dados da Nuvem + Data Atual) ---
+        res.json({
+            ...cidade.toObject(),
+            data_consulta: new Date().toLocaleDateString('pt-BR'),
+            clima: climaDados
+        });
 
     } catch (error) {
-        res.status(500).json({ erro: "Erro interno no servidor", detalhes: error.message });
+        res.status(500).json({ erro: error.message });
     }
 });
 
-// --- INICIALIZAÇÃO DO SERVIDOR ---
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 SERVIDOR RODANDO EM http://localhost:${PORT}`);
-    console.log(`💡 Para testar o ranking: http://localhost:${PORT}/api/cidades`);
+// 5. ROTA DO CHAT ADMIN (Onde você ensina a IA)
+app.post('/api/admin/treinar-chat', async (req, res) => {
+    try {
+        const { cidadeNome, mensagemAdmin } = req.body;
+        const cidade = await Cidade.findOne({ nome: new RegExp(`^${cidadeNome}$`, 'i') });
+        
+        if (!cidade) return res.status(404).json({ resposta: "Cidade não encontrada." });
+
+        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+        const promptTreino = `
+            Você é um assistente de banco de dados. O Administrador está te ensinando sobre ${cidadeNome}.
+            INFO NOVA: "${mensagemAdmin}"
+            MEMÓRIA ATUAL: "${cidade.info_curadoria}"
+            
+            Sua missão:
+            1. Una a info nova com a memória atual.
+            2. Responda confirmando o que aprendeu.
+            3. No fim da resposta, coloque a tag [MEMORIA] e o texto final da memória.
+        `;
+
+        const result = await model.generateContent(promptTreino);
+        const response = await result.response;
+        const respostaIA = response.text();
+
+        if (respostaIA.includes("[MEMORIA]")) {
+            const partes = respostaIA.split("[MEMORIA]");
+            cidade.info_curadoria = partes[1].trim();
+            cidade.relatorio_ia = ""; // Reseta para a busca pública atualizar
+            await cidade.save();
+            res.json({ resposta: partes[0].trim() });
+        } else {
+            res.json({ resposta: "Aprendi! Pode continuar enviando informações." });
+        }
+    } catch (err) { 
+        console.error("ERRO NO CHAT:", err);
+        res.status(500).json({ resposta: "Erro na IA: " + err.message }); 
+    }
 });
+
+app.get('/api/cidades', async (req, res) => {
+    const cidades = await Cidade.find().select('nome');
+    res.json(cidades);
+});
+
+app.listen(3000, () => console.log("🚀 SERVIDOR ON-LINE NA PORTA 3000"));
