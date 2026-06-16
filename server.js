@@ -8,6 +8,9 @@ const axios = require('axios');
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.get('/', (req, res) => {
+    res.send('🚀 Servidor do Paraná Living Score está online e operante!');
+});
 
 // 1. MODELO DE DADOS
 const CidadeSchema = new mongoose.Schema({
