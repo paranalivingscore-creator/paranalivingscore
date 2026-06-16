@@ -4,6 +4,9 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const axios = require('axios');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const Usuario = require('./models/Usuario');
 
 const app = express();
 app.use(cors());
@@ -132,6 +135,65 @@ app.post('/api/admin/treinar-chat', async (req, res) => {
 app.get('/api/cidades', async (req, res) => {
     const cidades = await Cidade.find().select('nome');
     res.json(cidades);
+});
+
+app.post('/api/auth/cadastro', async (req, res) => {
+    try {
+        const { nome, email, senha } = req.body;
+
+        // 1. Verifica se o usuário já existe
+        const usuarioExiste = await Usuario.findOne({ email });
+        if (usuarioExiste) return res.status(400).json({ erro: "E-mail já cadastrado." });
+
+        // 2. Segurança: Criptografar a senha
+        const salt = await bcrypt.genSalt(10);
+        const senhaCripto = await bcrypt.hash(senha, salt);
+
+        // 3. Salvar no banco (O primeiro a se cadastrar pode ser admin manualmente no banco)
+        const novoUsuario = new Usuario({
+            nome,
+            email,
+            senha: senhaCripto,
+            role: 'user' // Por padrão, todo cadastro é usuário comum
+        });
+
+        await novoUsuario.save();
+        res.status(201).json({ msg: "Usuário criado com sucesso!" });
+
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+// --- ROTA DE LOGIN ---
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { email, senha } = req.body;
+
+        // 1. Verificar se o e-mail existe
+        const usuario = await Usuario.findOne({ email });
+        if (!usuario) return res.status(400).json({ erro: "Usuário não encontrado." });
+
+        // 2. Verificar se a senha está correta
+        const senhaCorreta = await bcrypt.compare(senha, usuario.senha);
+        if (!senhaCorreta) return res.status(400).json({ erro: "Senha incorreta." });
+
+        // 3. Criar o Token (O crachá digital)
+        const token = jwt.sign(
+            { id: usuario._id, role: usuario.role },
+            "NOSSO_SEGREDO_SUPER_SEGURO", // Em produção, use process.env.JWT_SECRET
+            { expiresIn: '1h' }
+        );
+
+        // 4. Responder com os dados e o cargo (role)
+        res.json({
+            token,
+            usuario: { nome: usuario.nome, role: usuario.role }
+        });
+
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
 });
 
 // Localize: app.listen(3000, ...
