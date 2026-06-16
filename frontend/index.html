@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paraná Living Score - Inteligência Urbana</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>Paraná Living <span>Score</span></h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html" class="active">Início</a></li>
+                    <li><a href="ranking.html">Ranking</a></li>
+                    <li><a href="sobre.html">Sobre</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Seção Principal (Hero) -->
+    <!-- Seção Hero -->
+    <section class="hero">
+        <div class="container">
+            <h1>Onde morar no Paraná? <br><span>A IA responde.</span></h1>
+            <div class="search-container">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="citySearch" placeholder="Ex: Maringá, Toledo...">
+                </div>
+                <button class="btn-main">Analisar com IA</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- RESULTADO DA BUSCA (Dashboard) -->
+    <section id="resultadoBusca" class="container" style="display: none; margin-top: 40px; margin-bottom: 40px;">
+        <div class="card" style="border-top: 5px solid #2563eb; padding: 30px; background: white; border-radius: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 id="res-nome-cidade" style="font-size: 2rem;">Nome da Cidade</h2>
+                <span class="badge-ia"
+                    style="background: #dcfce7; color: #166534; padding: 5px 15px; border-radius: 20px; font-weight: bold;">
+                    <i class="fas fa-robot"></i> Inteligência Artificial Ativa
+                </span>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card score-card" style="text-align: center;">
+                    <h4>Living Score</h4>
+                    <div id="res-score" style="font-size: 4rem; font-weight: 800; color: #2563eb;">0.0</div>
+                </div>
+                <div class="card ai-report">
+                    <h3>Veredito da IA</h3>
+                    <p id="res-ia-texto" style="font-style: italic; color: #475569;">Carregando análise...</p>
+                </div>
+            </div>
+
+            <div class="indicators-grid" style="margin-top: 20px;">
+                <div class="ind-card">
+                    <i class="fas fa-graduation-cap"></i>
+                    <h4>Educação</h4>
+                    <span id="res-ideb">0.0</span>
+                </div>
+                <div class="ind-card">
+                    <i class="fas fa-shield-alt"></i>
+                    <h4>Segurança</h4>
+                    <span id="res-seguranca">0</span>
+                </div>
+                <div class="ind-card">
+                    <i class="fas fa-hospital"></i>
+                    <h4>Saúde</h4>
+                    <span id="res-saude">0.0</span>
+                </div>
+                <div class="ind-card">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <h4>Economia</h4>
+                    <span id="res-pib">R$ 0</span>
+                </div>
+                <div id="resultado-ia" class="card" style="display:none;">
+                    <div class="clima-badge">
+                        <span id="temp-valor">--</span>°C
+                        <img id="clima-icone" src="" alt="clima">
+                        <small id="clima-desc">--</small>
+                    </div>
+
+
+                </div>
+            </div>
+    </section>
+    <!-- Como Funciona -->
+    <section class="how-it-works container">
+        <div class="section-title">
+            <h2>Como chegamos ao Score?</h2>
+            <p>Nossa inteligência artificial cruza 4 pilares fundamentais</p>
+        </div>
+
+        <div class="process-grid">
+            <div class="process-card">
+                <div class="icon-circle"><i class="fas fa-database"></i></div>
+                <h3>Coleta</h3>
+                <p>Extraímos indicadores de segurança, saúde, educação e economia de bases públicas.</p>
+            </div>
+            <div class="process-card">
+                <div class="icon-circle"><i class="fas fa-calculator"></i></div>
+                <h3>Cálculo</h3>
+                <p>Algoritmos matemáticos ponderam cada dado para gerar uma nota de 0 a 100.</p>
+            </div>
+            <div class="process-card">
+                <div class="icon-circle"><i class="fas fa-brain"></i></div>
+                <h3>Análise IA</h3>
+                <p>Uma IA generativa interpreta os números e escreve um relatório detalhado para você.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categorias em Destaque -->
+    <section class="categories-preview">
+        <div class="container">
+            <div class="categories-grid">
+                <div class="cat-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <h4>Segurança</h4>
+                </div>
+                <div class="cat-item">
+                    <i class="fas fa-graduation-cap"></i>
+                    <h4>Educação</h4>
+                </div>
+                <div class="cat-item">
+                    <i class="fas fa-briefcase"></i>
+                    <h4>Empregos</h4>
+                </div>
+                <div class="cat-item">
+                    <i class="fas fa-hospital"></i>
+                    <h4>Saúde</h4>
+                </div>
+                <div class="cat-item">
+                    <i class="fas fa-leaf"></i>
+                    <h4>Saneamento</h4>
+                </div>
+                <div class="cat-item">
+                    <i class="fas fa-coins"></i>
+                    <h4>Custo de Vida</h4>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Carrossel Estilo Ranking Premium -->
+    <section class="ranking-premium">
+        <div id="premiumCarousel" class="premium-container">
+            <div class="premium-overlay">
+                <div class="container">
+                    <div class="premium-content" id="premiumContent" style="display: none;">
+                        <!-- Escondido até carregar -->
+                        <div class="premium-header">
+                            <div class="medal-wrapper">
+                                <img src="https://cdn-icons-png.flaticon.com/512/179/179249.png" alt="Medalha"
+                                    class="medal-img">
+                            </div>
+                            <h2 id="p-titulo">Carregando...</h2>
+                            <div class="badge-grade" id="p-grade">-</div>
+                        </div>
+                        <p id="p-descricao">Buscando dados oficiais do estado do Paraná...</p>
+                    </div>
+                    <!-- Opcional: Um loader visual aqui -->
+                    <div id="loader" class="loader">Aguarde, processando dados...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="premium-controls">
+            <button onclick="prevPremium()"><i class="fas fa-chevron-left"></i></button>
+            <button onclick="nextPremium()"><i class="fas fa-chevron-right"></i></button>
+        </div>
+    </section>
+
+    <!-- Controles discretos -->
+    <div class="premium-controls">
+        <button onclick="prevPremium()"><i class="fas fa-chevron-left"></i></button>
+        <button onclick="nextPremium()"><i class="fas fa-chevron-right"></i></button>
+    </div>
+    </section>
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 - Projeto Integrador IFPR Assis Chateaubriand</p>
+            <div class="footer-links">
+                <a href="#">Dados Abertos</a>
+                <a href="sobre.html">Equipe</a>
+            </div>
+        </div>
+    </footer>
+    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</body>
+
+</html>

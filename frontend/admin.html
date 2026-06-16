@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel de Treinamento IA</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #f0f4f8; font-family: sans-serif; }
+        .chat-wrap { max-width: 700px; margin: 50px auto; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        #chat { height: 400px; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; background: #fafafa; }
+        .msg { padding: 10px 15px; border-radius: 15px; max-width: 80%; font-size: 0.95rem; line-height: 1.4; }
+        .admin { background: #007bff; color: white; align-self: flex-end; }
+        .ia { background: #e9ecef; color: #333; align-self: flex-start; }
+        .input-area { display: flex; padding: 20px; border-top: 1px solid #eee; gap: 10px; }
+        input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 25px; outline: none; }
+        button { background: #007bff; color: white; border: none; padding: 0 20px; border-radius: 25px; cursor: pointer; }
+        select { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="chat-wrap">
+    <div style="padding: 20px; background: #007bff; color: white;">
+        <h2>🛡️ IA Trainer - Admin</h2>
+        <select id="cidadeSelect"><option>Carregando cidades...</option></select>
+    </div>
+    
+    <div id="chat">
+        <div class="msg ia">Olá! Escolha uma cidade e me conte algo novo sobre ela. Vou aprender e salvar na memória!</div>
+    </div>
+
+    <div class="input-area">
+        <input type="text" id="pergunta" placeholder="Escreva aqui o que a IA deve aprender...">
+        <button onclick="enviar()">Enviar</button>
+    </div>
+</div>
+
+<script>
+    const API = 'http://localhost:3000/api';
+
+    async function loadCidades() {
+        const res = await fetch(`${API}/cidades`);
+        const dados = await res.json();
+        const select = document.getElementById('cidadeSelect');
+        select.innerHTML = dados.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
+    }
+
+    async function enviar() {
+        const txt = document.getElementById('pergunta');
+        const box = document.getElementById('chat');
+        const cidade = document.getElementById('cidadeSelect').value;
+        const msg = txt.value;
+
+        if(!msg) return;
+
+        box.innerHTML += `<div class="msg admin">${msg}</div>`;
+        txt.value = "";
+        box.scrollTop = box.scrollHeight;
+
+        try {
+            const res = await fetch(`${API}/admin/treinar-chat`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ cidadeNome: cidade, mensagemAdmin: msg })
+            });
+            const data = await res.json();
+            box.innerHTML += `<div class="msg ia">${data.resposta || 'Sem resposta'}</div>`;
+        } catch (e) {
+            box.innerHTML += `<div class="msg ia">Erro ao conectar com servidor.</div>`;
+        }
+        box.scrollTop = box.scrollHeight;
+    }
+
+    loadCidades();
+</script>
+</body>
+</html>
