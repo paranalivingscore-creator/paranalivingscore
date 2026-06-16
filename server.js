@@ -196,6 +196,70 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+const jwt = require('jsonwebtoken');
+
+const verificarToken = (req, res, next) => {
+    const token = req.headers['authorization'];
+    if (!token) return res.status(403).json({ erro: "Acesso negado. Faça login." });
+
+    try {
+        const verificado = jwt.verify(token.split(" ")[1], process.env.GEMINI_KEY);
+        req.usuario = verificado;
+        next();
+    } catch (err) {
+        res.status(401).json({ erro: "Sessão expirada. Entre novamente." });
+    }
+};
+
+const bcrypt = require('bcryptjs');
+
+app.post('/api/auth/cadastro', async (req, res) => {
+    try {
+        const { nome, email, senha } = req.body;
+
+        // Validação: Usuário já existe?
+        const existe = await Usuario.findOne({ email });
+        if (existe) return res.status(400).json({ erro: "Este e-mail já está em uso." });
+
+        // Criptografia (Hash)
+        const salt = await bcrypt.genSalt(10);
+        const senha_hash = await bcrypt.hash(senha, salt);
+
+        const novoUsuario = new Usuario({ nome, email, senha_hash });
+        await novoUsuario.save();
+
+        res.status(201).json({ msg: "Cadastro realizado com sucesso!" });
+    } catch (err) {
+        res.status(500).json({ erro: "Erro ao salvar no banco: " + err.message });
+    }
+});
+
+app.post('/api/chat/enviar', verificarToken, async (req, res) => {
+    const { mensagem, conversaId } = req.body;
+    
+    try {
+        // 1. IA gera a resposta (Contexto PR Living Score)
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const prompt = `Você é o consultor do Paraná Living Score. Use dados reais do Paraná. Pergunta: ${mensagem}`;
+        const result = await model.generateContent(prompt);
+        const respostaIA = result.response.text();
+
+        // 2. Persistência no Banco: Salva a mensagem na conversa do usuário
+        let conversa = await Conversa.findById(conversaId);
+        if (!conversa) {
+            conversa = new Conversa({ usuario_id: req.usuario.id, titulo: mensagem.substring(0, 20), mensagens: [] });
+        }
+
+        conversa.mensagens.push({ remetente: 'usuario', conteudo: mensagem });
+        conversa.mensagens.push({ remetente: 'ia', conteudo: respostaIA });
+        await conversa.save();
+
+        res.json({ resposta: respostaIA, conversaId: conversa._id });
+    } catch (err) {
+        res.status(500).json({ erro: "Erro no Chat: " + err.message });
+    }
+});
+
 // Localize: app.listen(3000, ...
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));

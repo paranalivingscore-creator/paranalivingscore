@@ -244,6 +244,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+async function realizarCadastro(event) {
+    event.preventDefault(); // SOLUÇÃO DO ERRO: Impede o recarregamento da página
+
+    const nome = document.getElementById('nome').value;
+    const email = document.getElementById('email').value;
+    const senha = document.getElementById('senha').value;
+    const btn = document.getElementById('btnCadastro');
+
+    // Feedback visual de carregamento
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+    btn.disabled = true;
+
+    try {
+        const response = await fetch(`${API_URL}/auth/cadastro`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nome, email, senha })
+        });
+
+        const dados = await response.json();
+
+        if (response.ok) {
+            alert("✅ " + dados.msg);
+            window.location.href = 'login.html';
+        } else {
+            alert("❌ Erro: " + dados.erro);
+        }
+    } catch (err) {
+        alert("❌ Falha de conexão com o servidor.");
+    } finally {
+        btn.innerHTML = 'Finalizar Cadastro';
+        btn.disabled = false;
+    }
+}
+
 /**
  * INICIALIZAÇÃO: Event Listeners
  * Garante que o código só rode quando o HTML estiver pronto.
