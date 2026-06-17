@@ -4,6 +4,9 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const axios = require('axios');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const Usuario = require('./models/Usuario');
 
 const app = express();
 app.use(cors());
@@ -37,6 +40,32 @@ mongoose.connect(process.env.MONGO_URI)
 // 3. CONFIGURAÇÃO DA IA (USANDO GEMINI-PRO PARA EVITAR 404)
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
 
+function calcularLivingScore(indicadores) {
+    // Definimos os pesos de cada área (Soma total dos pesos = 10)
+    const PESOS = {
+        seguranca: 3,
+        educacao: 3,
+        saude: 2,
+        economia: 2
+    };
+
+    // Pegamos os valores (se não existir o dado, usamos 0 para não quebrar o cálculo)
+    const seg = indicadores.seguranca_indice || 0;
+    const edu = indicadores.ideb * 10 || 0; // IDEB é 0 a 10, multiplicamos por 10 para escala 100
+    const sau = indicadores.saude_leitos * 10 || 0; // Exemplo de normalização
+    const eco = indicadores.pib_per_capita > 50000 ? 100 : (indicadores.pib_per_capita / 500);
+
+    // Cálculo da Média Ponderada
+    const resultado = (
+        (seg * PESOS.seguranca) +
+        (edu * PESOS.educacao) +
+        (sau * PESOS.saude) +
+        (eco * PESOS.economia)
+    ) / 10;
+
+    return resultado.toFixed(1); // Retorna com uma casa decimal (ex: 85.5)
+}
+
 // 4. ROTA DE BUSCA PÚBLICA (Lê a memória do Admin)
 app.get('/api/cidades/busca/:nome', async (req, res) => {
     try {
@@ -45,34 +74,15 @@ app.get('/api/cidades/busca/:nome', async (req, res) => {
 
         if (!cidade) return res.status(404).json({ erro: "Cidade não encontrada" });
 
-        // --- NOVIDADE: BUSCANDO CLIMA EM TEMPO REAL (Serviço em Nuvem) ---
-        let climaDados = null;
-        try {
-            const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${nomeCidade},BR&units=metric&lang=pt_br&appid=${process.env.WEATHER_API_KEY}`;
-            const weatherRes = await axios.get(weatherUrl);
-            climaDados = {
-                temp: Math.round(weatherRes.data.main.temp),
-                descricao: weatherRes.data.weather[0].description,
-                icone: weatherRes.data.weather[0].icon,
-                umidade: weatherRes.data.main.humidity
-            };
-        } catch (errWeather) {
-            console.error("Erro ao buscar clima:", errWeather.message);
-        }
+        // --- CÁLCULO DO SCORE EM TEMPO REAL ---
+        // Criamos um objeto temporário com o score calculado
+        const cidadeComScore = cidade.toObject();
+        cidadeComScore.score_final = calcularLivingScore(cidade.indicadores);
 
-        // --- LÓGICA DA IA (Mantém a que já tínhamos) ---
-        if (!cidade.relatorio_ia || cidade.relatorio_ia.includes("Aguardando")) {
-            console.log(`🤖 IA gerando relatório para: ${cidade.nome}...`);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-            const prompt = `Analise a qualidade de vida em ${cidade.nome}/PR. PIB: ${cidade.indicadores.pib_per_capita}, IDEB: ${cidade.indicadores.ideb}. Seja breve.`;
-            const result = await model.generateContent(prompt);
-            cidade.relatorio_ia = (await result.response).text();
-            await cidade.save();
-        }
+        // ... resto do código (clima, IA, etc) ...
 
-        // --- RESPOSTA FINAL (Dados do Banco + Dados da Nuvem + Data Atual) ---
         res.json({
-            ...cidade.toObject(),
+            ...cidadeComScore,
             data_consulta: new Date().toLocaleDateString('pt-BR'),
             clima: climaDados
         });
@@ -125,6 +135,129 @@ app.post('/api/admin/treinar-chat', async (req, res) => {
 app.get('/api/cidades', async (req, res) => {
     const cidades = await Cidade.find().select('nome');
     res.json(cidades);
+});
+
+app.post('/api/auth/cadastro', async (req, res) => {
+    try {
+        const { nome, email, senha } = req.body;
+
+        // 1. Verifica se o usuário já existe
+        const usuarioExiste = await Usuario.findOne({ email });
+        if (usuarioExiste) return res.status(400).json({ erro: "E-mail já cadastrado." });
+
+        // 2. Segurança: Criptografar a senha
+        const salt = await bcrypt.genSalt(10);
+        const senhaCripto = await bcrypt.hash(senha, salt);
+
+        // 3. Salvar no banco (O primeiro a se cadastrar pode ser admin manualmente no banco)
+        const novoUsuario = new Usuario({
+            nome,
+            email,
+            senha: senhaCripto,
+            role: 'user' // Por padrão, todo cadastro é usuário comum
+        });
+
+        await novoUsuario.save();
+        res.status(201).json({ msg: "Usuário criado com sucesso!" });
+
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+// --- ROTA DE LOGIN ---
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { email, senha } = req.body;
+
+        // 1. Verificar se o e-mail existe
+        const usuario = await Usuario.findOne({ email });
+        if (!usuario) return res.status(400).json({ erro: "Usuário não encontrado." });
+
+        // 2. Verificar se a senha está correta
+        const senhaCorreta = await bcrypt.compare(senha, usuario.senha);
+        if (!senhaCorreta) return res.status(400).json({ erro: "Senha incorreta." });
+
+        // 3. Criar o Token (O crachá digital)
+        const token = jwt.sign(
+            { id: usuario._id, role: usuario.role },
+            "NOSSO_SEGREDO_SUPER_SEGURO", // Em produção, use process.env.JWT_SECRET
+            { expiresIn: '1h' }
+        );
+
+        // 4. Responder com os dados e o cargo (role)
+        res.json({
+            token,
+            usuario: { nome: usuario.nome, role: usuario.role }
+        });
+
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+const jwt = require('jsonwebtoken');
+
+const verificarToken = (req, res, next) => {
+    const token = req.headers['authorization'];
+    if (!token) return res.status(403).json({ erro: "Acesso negado. Faça login." });
+
+    try {
+        const verificado = jwt.verify(token.split(" ")[1], process.env.GEMINI_KEY);
+        req.usuario = verificado;
+        next();
+    } catch (err) {
+        res.status(401).json({ erro: "Sessão expirada. Entre novamente." });
+    }
+};
+
+const bcrypt = require('bcryptjs');
+
+app.post('/api/auth/cadastro', async (req, res) => {
+    try {
+        const { nome, email, senha } = req.body;
+
+        // Validação: Usuário já existe?
+        const existe = await Usuario.findOne({ email });
+        if (existe) return res.status(400).json({ erro: "Este e-mail já está em uso." });
+
+        // Criptografia (Hash)
+        const salt = await bcrypt.genSalt(10);
+        const senha_hash = await bcrypt.hash(senha, salt);
+
+        const novoUsuario = new Usuario({ nome, email, senha_hash });
+        await novoUsuario.save();
+
+        res.status(201).json({ msg: "Cadastro realizado com sucesso!" });
+    } catch (err) {
+        res.status(500).json({ erro: "Erro ao salvar no banco: " + err.message });
+    }
+});
+
+app.post('/api/chat/enviar', verificarToken, async (req, res) => {
+    const { mensagem, conversaId } = req.body;
+    
+    try {
+        // 1. IA gera a resposta (Contexto PR Living Score)
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const prompt = `Você é o consultor do Paraná Living Score. Use dados reais do Paraná. Pergunta: ${mensagem}`;
+        const result = await model.generateContent(prompt);
+        const respostaIA = result.response.text();
+
+        // 2. Persistência no Banco: Salva a mensagem na conversa do usuário
+        let conversa = await Conversa.findById(conversaId);
+        if (!conversa) {
+            conversa = new Conversa({ usuario_id: req.usuario.id, titulo: mensagem.substring(0, 20), mensagens: [] });
+        }
+
+        conversa.mensagens.push({ remetente: 'usuario', conteudo: mensagem });
+        conversa.mensagens.push({ remetente: 'ia', conteudo: respostaIA });
+        await conversa.save();
+
+        res.json({ resposta: respostaIA, conversaId: conversa._id });
+    } catch (err) {
+        res.status(500).json({ erro: "Erro no Chat: " + err.message });
+    }
 });
 
 // Localize: app.listen(3000, ...
