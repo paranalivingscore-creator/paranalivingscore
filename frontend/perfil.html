@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Perfil - Paraná Living Score</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>Paraná Living <span>Score</span></h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Início</a></li>
+                    <li><a href="perfil.html" class="active">Minha Conta</a></li>
+                    <li><button onclick="logout()" class="btn-view" style="background: #ef4444; margin-left: 15px;">Sair</button></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="auth-wrapper">
+            <div class="auth-card" style="max-width: 600px;">
+                <h2>Configurações da Conta</h2>
+                <div id="auth-msg" class="msg-box" style="display: none;"></div>
+
+                <form id="perfilForm">
+                    <div class="form-group">
+                        <label>Nome Completo</label>
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="perfil-nome" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>E-mail</label>
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="perfil-email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nova Senha (deixe em branco para manter)</label>
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="perfil-senha" placeholder="••••••••">
+                    </div>
+
+                    <button type="submit" class="btn-auth" id="btnSalvarPerfil">Salvar Alterações</button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 - Projeto Integrador IFPR</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Função de logout exclusiva desta página ou pode ir para o script.js
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

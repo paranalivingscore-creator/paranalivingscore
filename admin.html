@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paraná Living Score - Inteligência Urbana</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>Paraná Living <span>Score</span></h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html" class="active">Início</a></li>
+                    <li><a href="ranking.html">Ranking</a></li>
+                    <li><a href="sobre.html">Sobre</a></li>
+                    <li><a href="login.html">Login</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+<body>
+
+<div class="chat-wrap">
+    <div style="padding: 20px; background: #007bff; color: white;">
+        <h2>🛡️ IA Trainer - Admin</h2>
+        <select id="cidadeSelect"><option>Carregando cidades...</option></select>
+    </div>
+    
+    <div id="chat">
+        <div class="msg ia">Olá! Escolha uma cidade e me conte algo novo sobre ela. Vou aprender e salvar na memória!</div>
+    </div>
+
+    <div class="input-area">
+        <input type="text" id="pergunta" placeholder="Escreva aqui o que a IA deve aprender...">
+        <button onclick="enviar()">Enviar</button>
+    </div>
+</div>
+
+<script>
+    const API = 'http://localhost:3000/api';
+
+    async function loadCidades() {
+        const res = await fetch(`${API}/cidades`);
+        const dados = await res.json();
+        const select = document.getElementById('cidadeSelect');
+        select.innerHTML = dados.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
+    }
+
+    async function enviar() {
+        const txt = document.getElementById('pergunta');
+        const box = document.getElementById('chat');
+        const cidade = document.getElementById('cidadeSelect').value;
+        const msg = txt.value;
+
+        if(!msg) return;
+
+        box.innerHTML += `<div class="msg admin">${msg}</div>`;
+        txt.value = "";
+        box.scrollTop = box.scrollHeight;
+
+        try {
+            const res = await fetch(`${API}/admin/treinar-chat`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ cidadeNome: cidade, mensagemAdmin: msg })
+            });
+            const data = await res.json();
+            box.innerHTML += `<div class="msg ia">${data.resposta || 'Sem resposta'}</div>`;
+        } catch (e) {
+            box.innerHTML += `<div class="msg ia">Erro ao conectar com servidor.</div>`;
+        }
+        box.scrollTop = box.scrollHeight;
+    }
+
+    if (localStorage.getItem('usuarioRole') !== 'admin') {
+    alert("Acesso negado!");
+    window.location.href = 'login.html';
+}
+
+    loadCidades();
+</script>
+</body>
+</html>

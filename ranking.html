@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paraná Living Score - Inteligência Urbana</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>Paraná Living <span>Score</span></h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html" class="active">Início</a></li>
+                    <li><a href="ranking.html">Ranking</a></li>
+                    <li><a href="sobre.html">Sobre</a></li>
+                    <li><a href="login.html">Login</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+
+    <main class="container">
+        <section class="ranking-header">
+            <h2>Melhores Cidades do Paraná</h2>
+            <p>Classificação baseada em indicadores reais e análise de IA.</p>
+
+            <!-- Filtros Rápidos -->
+            <div class="filters">
+                <span>Filtrar por:</span>
+                <button class="filter-btn active">Geral</button>
+                <button class="filter-btn">Segurança</button>
+                <button class="filter-btn">Educação</button>
+                <button class="filter-btn">Emprego</button>
+            </div>
+        </section>
+
+        <section class="podium">
+            <div class="podium-item second">
+                <div class="medal">2º</div>
+                <h3 id="pos2-nome">---</h3>
+                <span class="podium-score" id="pos2-score">00.0</span>
+            </div>
+            <div class="podium-item first">
+                <div class="medal">1º</div>
+                <i class="fas fa-crown"></i>
+                <h3 id="pos1-nome">---</h3>
+                <span class="podium-score" id="pos1-score">00.0</span>
+            </div>
+            <div class="podium-item third">
+                <div class="medal">3º</div>
+                <h3 id="pos3-nome">---</h3>
+                <span class="podium-score" id="pos3-score">00.0</span>
+            </div>
+        </section>
+
+        <!-- Tabela Completa -->
+        <section class="ranking-list">
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th>Posição</th>
+                        <th>Cidade</th>
+                        <th>Educação</th>
+                        <th>Segurança</th>
+                        <th>Saúde</th>
+                        <th>Score Final</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="rankingTableBody">
+                    <!-- O JAVASCRIPT VAI INSERIR AS LINHAS AQUI -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 - Projeto Integrador IFPR Assis Chateaubriand</p>
+    </footer>
+    <script src="script.js"></script>
+</body>
+
+</html>

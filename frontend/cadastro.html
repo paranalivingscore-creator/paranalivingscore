@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paraná Living Score - Inteligência Urbana</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>Paraná Living <span>Score</span></h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html" class="active">Início</a></li>
+                    <li><a href="ranking.html">Ranking</a></li>
+                    <li><a href="sobre.html">Sobre</a></li>
+                    <li><a href="login.html">Login</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+
+    <main class="auth-wrapper">
+        <div class="auth-card">
+            <h2>Criar Conta</h2>
+            <form id="cadastroForm">
+                <div id="auth-msg" class="msg-box" style="display: none;"></div>
+                <div class="form-group">
+                    <label for="nome">Nome Completo</label>
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="nome" placeholder="Seu nome" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">E-mail</label>
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="email" placeholder="seu@email.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="senha">Senha</label>
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="senha" placeholder="Crie uma senha forte" required>
+                </div>
+
+                <button type="submit" class="btn-auth" id="btnCadastro">Finalizar Cadastro</button>
+            </form>
+
+            <div class="auth-footer">
+                Já possui conta? <a href="login.html">Fazer Login</a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 - Projeto Integrador IFPR Assis Chateaubriand</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
