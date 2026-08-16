@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultor IA - Paraná Living Score</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>Paraná Living <span>Score</span></h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Início</a></li>
+                    <li><a href="ranking.html">Ranking</a></li>
+                    <li><a href="chat.html" class="active">Chat IA</a></li>
+                    <li><a href="sobre.html">Sobre</a></li>
+                    <li><a href="login.html">Login</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container chat-page-wrapper">
+        <div class="chat-header-area">
+            <div>
+                <h2><i class="fas fa-robot" style="color: var(--primary-color);"></i> Consultor Urbano IA</h2>
+                <p>Tire dúvidas sobre indicadores, segurança, educação e onde morar no Paraná.</p>
+            </div>
+            <button class="btn-clear-chat" onclick="limparChat()" title="Iniciar nova conversa">
+                <i class="fas fa-trash-alt"></i> Novo Chat
+            </button>
+        </div>
+
+        <!-- Sugestões de perguntas rápidas -->
+        <div class="chat-suggestions" id="chatSuggestions">
+            <button onclick="usarSugestao('Quais são as 3 cidades mais seguras do Paraná?')">🛡️ Cidades mais seguras</button>
+            <button onclick="usarSugestao('Compare Maringá e Londrina em educação e saúde.')">⚖️ Comparar Maringá e Londrina</button>
+            <button onclick="usarSugestao('Qual cidade do Paraná tem o melhor IDEB?')">🎓 Melhor IDEB</button>
+        </div>
+
+        <!-- Janela de Mensagens -->
+        <div class="chat-container">
+            <div class="chat-messages" id="chatWindow">
+                <div class="msg-bubble msg-ia">
+                    Olá! Sou o consultor inteligente do <strong>Paraná Living Score</strong>. Como posso te ajudar a explorar as cidades do nosso estado hoje?
+                </div>
+            </div>
+
+            <!-- Formulário de Envio -->
+            <form id="chatForm" class="chat-input-wrapper">
+                <input type="text" id="msg-input" placeholder="Pergunte sobre qualquer cidade do Paraná..." autocomplete="off" required>
+                <button type="submit" id="btnEnviarChat">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 - Projeto Integrador IFPR Assis Chateaubriand</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
