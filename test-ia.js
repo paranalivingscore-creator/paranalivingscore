@@ -1,41 +1,56 @@
 require('dotenv').config();
-const axios = require('axios');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-async function encontrarModeloFuncional() {
-    const key = process.env.GEMINI_KEY?.trim();
-    console.log("🔍 Analisando todos os modelos disponíveis para sua chave...\n");
+async function testarModelosDisponiveis() {
+    console.log("==================================================");
+    console.log("🔍 TESTE DE MODELOS DA IA - PARANÁ LIVING SCORE");
+    console.log("==================================================");
+    console.log("Chave carregada do .env:", process.env.GEMINI_KEY ? `${process.env.GEMINI_KEY.substring(0, 8)}...` : "❌ NÃO ENCONTRADA");
+    console.log("--------------------------------------------------");
 
-    try {
-        const res = await axios.get(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
-        const modelos = (res.data.models || [])
-            .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"))
-            .map(m => m.name.replace("models/", ""));
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
 
-        for (const modelo of modelos) {
-            process.stdout.write(`👉 Testando [${modelo}]... `);
-            try {
-                const resposta = await axios.post(
-                    `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${key}`,
-                    { contents: [{ parts: [{ text: "Diga apenas 'Paraná Living Score OK!'" }] }] },
-                    { headers: { 'Content-Type': 'application/json' } }
-                );
+    // Lista de modelos para testar
+    const modelosParaTestar = [
+        "gemini-1.5-flash",
+        "gemini-1.5-flash-latest",
+        "gemini-1.5-flash-8b",
+        "gemini-1.5-pro",
+        "gemini-1.5-pro-latest",
+        "gemini-pro",
+        "gemma-2-27b-it",
+        "gemma-2-9b-it"
+    ];
 
-                const texto = resposta.data?.candidates?.[0]?.content?.parts?.[0]?.text;
-                console.log(`\n\n🎉 MODELO ENCONTRADO COM SUCESSO!`);
-                console.log(`🌟 Modelo ativo: "${modelo}"`);
-                console.log(`💬 Resposta da IA: ${texto.trim()}\n`);
-                return;
-            } catch (err) {
-                const status = err.response?.status || "Erro";
-                const msg = err.response?.data?.error?.message || err.message;
-                console.log(`❌ (${status}: ${msg.substring(0, 40)}...)`);
-            }
+    let algumFuncionou = false;
+    const modelosValidos = [];
+
+    for (const nomeModelo of modelosParaTestar) {
+        process.stdout.write(`⏳ Testando modelo: [${nomeModelo}] ... `);
+        try {
+            const model = genAI.getGenerativeModel({ model: nomeModelo });
+            const result = await model.generateContent("Responda apenas com a palavra: OK");
+            const response = await result.response;
+            const texto = response.text().trim();
+
+            console.log(`✅ SUCESSO! Resposta: "${texto}"`);
+            modelosValidos.push(nomeModelo);
+            algumFuncionou = true;
+        } catch (erro) {
+            console.log(`❌ FALHOU`);
+            console.log(`   Motivo: ${erro.message}`);
         }
-
-        console.log("\n⚠️ Nenhum dos modelos listados respondeu.");
-    } catch (e) {
-        console.error("Erro ao listar modelos:", e.message);
     }
+
+    console.log("\n==================================================");
+    if (algumFuncionou) {
+        console.log("🎉 MODELOS QUE FUNCIONARAM COM SUCESSO:");
+        modelosValidos.forEach(m => console.log(`   👉 "${m}"`));
+        console.log("\nCopie o primeiro da lista acima e coloque no server.js!");
+    } else {
+        console.log("⚠️ NENHUM modelo respondeu com sucesso.");
+    }
+    console.log("==================================================");
 }
 
-encontrarModeloFuncional();
+testarModelosDisponiveis();
