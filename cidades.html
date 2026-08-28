@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Municípios do Paraná - Paraná Living Score</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>Paraná Living <span>Score</span></h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Início</a></li>
+        <li><a href="ranking.html">Ranking</a></li>
+        <li><a href="cidades.html">Municípios</a></li>
+        <li><a href="comparar.html">Comparar</a></li>
+        <li><a href="chat.html">Chat IA</a></li>
+        <li><a href="login.html">Login</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 40px 20px;">
+        
+        <!-- BARRA DE PESQUISA COM AUTOCOMPLETAR -->
+        <section class="section-title" style="margin-top: 10px; margin-bottom: 25px;">
+            <h2>Panorama dos Municípios Paranaenses</h2>
+            <p>Consulte indicadores de desempenho do IPARDES e informações geográficas do IBGE dos 399 municípios.</p>
+            
+            <div class="ai-prompt-box" style="max-width: 600px; margin: 25px auto 0;">
+                <div class="ai-input-wrapper">
+                    <i class="fas fa-search magic-icon"></i>
+                    <input type="text" id="inputBuscaMunicipio" list="listaSugestoesCidades" placeholder="Digite o nome de uma cidade (Ex: Toledo, Maringá)...">
+                    <datalist id="listaSugestoesCidades"></datalist>
+                    <button type="button" class="btn-hero-send" onclick="pesquisarMunicipioDetalhes()">
+                        <i class="fas fa-arrow-right"></i> Consultar
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- MENSAGEM DE CARREGAMENTO / ERRO -->
+        <div id="cidade-loader" style="display: none; text-align: center; margin: 30px 0; font-size: 1.1rem; color: var(--primary-color);">
+            <i class="fas fa-spinner fa-spin"></i> Carregando dados oficiais do município...
+        </div>
+
+        <!-- PAINEL DE RESULTADOS DA CIDADE -->
+        <section id="painelDetalhesCidade" style="display: none; animation: fadeIn 0.4s ease;">
+            
+<!-- CABEÇALHO DO MUNICÍPIO COM FOTO, RESUMO E FATOS RÁPIDOS -->
+            <div class="admin-card" style="margin-bottom: 25px; padding: 0; overflow: hidden; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.06);">
+                
+                <!-- FOTO PANORÂMICA -->
+                <div style="position: relative; width: 100%; height: 230px; background: #0f172a; overflow: hidden;">
+                    <img 
+                        id="detalhe-foto-banner" 
+                        src="https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=1200&q=80" 
+                        alt="Foto do Município" 
+                        style="width: 100%; height: 100%; object-fit: cover; opacity: 0.85; transition: 0.4s ease;"
+                    >
+                    <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.3) 60%, transparent 100%);"></div>
+                    
+                    <div style="position: absolute; bottom: 15px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <span style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: bold;">
+                                Estado do Paraná • Código IBGE: <span id="detalhe-ibge" style="color: #60a5fa;">-</span>
+                            </span>
+                            <h1 id="detalhe-nome" style="font-size: 2.3rem; color: #ffffff; margin: 2px 0; font-weight: 800;">Nome do Município</h1>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CORPO: FATOS RÁPIDOS + DESCRIÇÃO -->
+                <div style="padding: 22px;">
+                    
+                    <!-- LINHA DE PONTUAÇÃO E CLIMA -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
+                        <div>
+                            <p style="color: var(--text-muted); font-size: 0.95rem;">
+                                <i class="fas fa-map-marker-alt" style="color: var(--primary-color);"></i> 
+                                Mesorregião: <strong id="detalhe-meso">-</strong> | Microrregião: <strong id="detalhe-micro">-</strong>
+                            </p>
+                            <p id="detalhe-clima-texto" style="font-size: 0.88rem; color: #475569; margin-top: 4px;">
+                                <i class="fas fa-cloud-sun"></i> Clima atual: <span id="detalhe-clima-valor">Carregando clima...</span>
+                            </p>
+                        </div>
+
+                        <div style="text-align: center; background: #eff6ff; padding: 10px 22px; border-radius: 12px; border: 1px solid #bfdbfe;">
+                            <span style="font-size: 0.75rem; font-weight: bold; color: var(--primary-color); text-transform: uppercase;">Living Score Oficial</span>
+                            <div id="detalhe-score" style="font-size: 2.2rem; font-weight: 800; color: var(--primary-color); line-height: 1;">00.0</div>
+                        </div>
+                    </div>
+
+                    <!-- PÍLULAS DE FATOS RÁPIDOS -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                        <div style="background: #f8fafc; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: bold;">👥 Habitantes (Censo)</span>
+                            <div id="detalhe-populacao" style="font-size: 1.05rem; font-weight: 700; color: var(--secondary-color); margin-top: 2px;">Consultando...</div>
+                        </div>
+
+                        <div style="background: #f8fafc; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: bold;">🏷️ Gentílico</span>
+                            <div id="detalhe-gentilico" style="font-size: 1.05rem; font-weight: 700; color: var(--secondary-color); margin-top: 2px;">Paranaense</div>
+                        </div>
+
+                        <div style="background: #f8fafc; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: bold;">🗺️ Área Territorial</span>
+                            <div id="detalhe-area" style="font-size: 1.05rem; font-weight: 700; color: var(--secondary-color); margin-top: 2px;">Em catalogação</div>
+                        </div>
+
+                        <div style="background: #f8fafc; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: bold;">🏛️ Gestão</span>
+                            <div id="detalhe-prefeitura" style="font-size: 1.05rem; font-weight: 700; color: var(--secondary-color); margin-top: 2px;">Prefeitura Municipal</div>
+                        </div>
+                    </div>
+
+                    <!-- BOX DE DESCRIÇÃO / HISTÓRIA -->
+                    <div style="background: #f1f5f9; padding: 16px 20px; border-radius: 10px; border-left: 4px solid var(--accent-color); margin-bottom: 15px;">
+                        <h4 style="font-size: 0.95rem; color: var(--secondary-color); margin-bottom: 6px; font-weight: bold;">
+                            <i class="fas fa-book-open" style="color: var(--accent-color);"></i> Sobre o Município
+                        </h4>
+                        <p id="detalhe-descricao-texto" style="font-size: 0.92rem; color: #334155; line-height: 1.6;">
+                            Carregando informações históricas e perfil da cidade...
+                        </p>
+                    </div>
+
+                    <!-- BOTÃO IA -->
+                    <div style="display: flex; justify-content: flex-end;">
+                        <button class="btn-main" onclick="perguntarSobreEstaCidade()" style="padding: 10px 22px; font-size: 0.9rem;">
+                            <i class="fas fa-robot"></i> Fazer Pergunta ao Consultor IA sobre esta cidade
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+            <!-- GRID DOS INDICADORES E CONTEXTO -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+                
+                <!-- CARD 1: INDICADORES PARANÁ LIVING SCORE (IPARDES) -->
+                <div class="admin-card" style="margin-bottom: 0;">
+                    <h3 style="color: var(--secondary-color); margin-bottom: 15px; font-size: 1.2rem;">
+                        <i class="fas fa-chart-pie" style="color: var(--primary-color);"></i> Indicadores de Desempenho (IPARDES)
+                    </h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">
+                        Índice decimal oficial de 0.000 a 1.000.
+                    </p>
+
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        
+                        <!-- Educação -->
+                        <div style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <div style="display: flex; justify-content: space-between; font-weight: bold;">
+                                <span>🎓 Educação</span>
+                                <span id="card-edu-atual" style="color: var(--primary-color);">0.0000</span>
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; display: flex; justify-content: space-between;">
+                                <span>2022: <strong id="card-edu-2022">-</strong></span>
+                                <span>2023: <strong id="card-edu-2023">-</strong></span>
+                            </div>
+                        </div>
+
+                        <!-- Saúde -->
+                        <div style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <div style="display: flex; justify-content: space-between; font-weight: bold;">
+                                <span>🏥 Saúde</span>
+                                <span id="card-sau-atual" style="color: var(--primary-color);">0.0000</span>
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; display: flex; justify-content: space-between;">
+                                <span>2022: <strong id="card-sau-2022">-</strong></span>
+                                <span>2023: <strong id="card-sau-2023">-</strong></span>
+                            </div>
+                        </div>
+
+                        <!-- Economia -->
+                        <div style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <div style="display: flex; justify-content: space-between; font-weight: bold;">
+                                <span>💼 Renda e Emprego</span>
+                                <span id="card-eco-atual" style="color: var(--primary-color);">0.0000</span>
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; display: flex; justify-content: space-between;">
+                                <span>2022: <strong id="card-eco-2022">-</strong></span>
+                                <span>2023: <strong id="card-eco-2023">-</strong></span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- CARD 2: CONTEXTO GEOGRÁFICO E REGIONAL (IBGE) -->
+                <div class="admin-card" style="margin-bottom: 0;">
+                    <h3 style="color: var(--secondary-color); margin-bottom: 15px; font-size: 1.2rem;">
+                        <i class="fas fa-globe-americas" style="color: var(--accent-color);"></i> Contexto Regional (IBGE)
+                    </h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">
+                        Divisão territorial e contextualização oficial.
+                    </p>
+
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        
+                        <div style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Região Geográfica Imediata</span>
+                            <div id="card-ibge-imediata" style="font-size: 1.05rem; font-weight: bold; color: var(--secondary-color); margin-top: 2px;">-</div>
+                        </div>
+
+                        <div style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Região Geográfica Intermediária</span>
+                            <div id="card-ibge-intermediaria" style="font-size: 1.05rem; font-weight: bold; color: var(--secondary-color); margin-top: 2px;">-</div>
+                        </div>
+
+                        <div style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Mesorregião e Microrregião</span>
+                            <div id="card-ibge-regiao-completa" style="font-size: 0.95rem; font-weight: 600; color: var(--secondary-color); margin-top: 2px;">-</div>
+                        </div>
+
+                    </div>
+                </div>
+                <!-- CARD 3: LOCALIZAÇÃO NO GOOGLE MAPS -->
+            <div class="admin-card" style="margin-top: 25px; margin-bottom: 0;">
+                <h3 style="color: var(--secondary-color); margin-bottom: 15px; font-size: 1.2rem;">
+                    <i class="fas fa-map-marked-alt" style="color: #ea4335;"></i> Localização e Limites Municipais
+                </h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">
+                    Visualização interativa da malha urbana e limites territoriais via Google Maps.
+                </p>
+
+                <div style="width: 100%; height: 380px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color); box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <iframe 
+                        id="mapaCidadeIframe"
+                        width="100%" 
+                        height="100%" 
+                        style="border:0;" 
+                        loading="lazy" 
+                        allowfullscreen 
+                        referrerpolicy="no-referrer-when-downgrade"
+                        src="">
+                    </iframe>
+                </div>
+            </div>
+
+            <!-- CARD 4: GRÁFICO DE EVOLUÇÃO 2022 vs 2023 -->
+            <div class="admin-card" style="margin-top: 25px; margin-bottom: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+                    <h3 style="color: var(--secondary-color); font-size: 1.2rem;">
+                        <i class="fas fa-chart-bar" style="color: var(--primary-color);"></i> Evolução dos Indicadores (2022 vs 2023)
+                    </h3>
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">Comparativo de desempenho anual oficial do IPARDES</span>
+                </div>
+                <div style="position: relative; width: 100%; height: 320px;">
+                    <canvas id="graficoEvolucaoCidade"></canvas>
+                </div>
+            </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- RODAPÉ ATUALIZADO COM LINK PARA O SOBRE -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 - Projeto Final de Curso (PFC) • IFPR Campus Assis Chateaubriand</p>
+            <div class="footer-links">
+                <a href="ranking.html">Ranking Geral</a>
+                <a href="cidades.html">Municípios</a>
+                <a href="chat.html">Consultor IA</a>
+                <a href="sobre.html" style="font-weight: bold; color: var(--primary-color);">Sobre o Projeto</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            inicializarPaginaCidades();
+        });
+    </script>
+</body>
+</html>

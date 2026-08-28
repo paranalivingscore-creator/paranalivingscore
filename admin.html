@@ -22,7 +22,7 @@
                     <li><a href="ranking.html">Ranking</a></li>
                     <li><a href="chat.html">Chat IA</a></li>
                     <li><a href="sobre.html">Sobre</a></li>
-                    <li><a href="admin.html" class="active" style="color: #ffd700;">Painel Admin</a></li>
+                    <li><a href="admin.html" class="active" style="color: #ffd700;"><i class="fas fa-shield-alt"></i> Painel Admin</a></li>
                     <li><a href="javascript:void(0)" onclick="logout()" style="color: #ef4444;"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
                 </ul>
             </nav>
@@ -31,15 +31,15 @@
 
     <main class="container admin-wrapper">
         <div class="admin-header">
-            <h2><i class="fas fa-shield-alt"></i> Gestão de Dados Oficiais do Paraná</h2>
-            <p>Cadastre e gerencie cidades, indicadores, anos de referência e fontes governamentais.</p>
+            <h2><i class="fas fa-database"></i> Gestão de Municípios e Indicadores</h2>
+            <p>Gerencie dados oficiais do IPARDES e indicadores municipais para o cálculo do Living Score.</p>
         </div>
 
         <div id="admin-msg" class="msg-box" style="display: none;"></div>
 
         <!-- FORMULÁRIO DE CADASTRO / EDIÇÃO -->
         <section class="admin-card">
-            <h3 id="form-titulo"><i class="fas fa-plus-circle"></i> Cadastrar Nova Cidade</h3>
+            <h3 id="form-titulo"><i class="fas fa-edit"></i> Formulário do Município</h3>
             
             <form id="adminCidadeForm">
                 <input type="hidden" id="cidade-id">
@@ -48,87 +48,74 @@
                 <div class="admin-grid-2">
                     <div class="form-group">
                         <label for="ibge_id">Código IBGE *</label>
-                        <input type="number" id="ibge_id" placeholder="Ex: 4106902" required>
+                        <input type="number" id="ibge_id" placeholder="Ex: 4102000" required>
                     </div>
                     <div class="form-group">
                         <label for="cidade-nome">Nome do Município *</label>
-                        <input type="text" id="cidade-nome" placeholder="Ex: Curitiba" required>
+                        <input type="text" id="cidade-nome" placeholder="Ex: Assis Chateaubriand" required>
                     </div>
                 </div>
 
                 <hr class="divider">
-                <h4 class="section-subtitle"><i class="fas fa-chart-bar"></i> Indicadores Oficiais</h4>
+                <h4 class="section-subtitle"><i class="fas fa-chart-line"></i> Indicadores Oficiais por Área (IPARDES)</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">
+                    Valores em índice decimal (ex: 0.8111) ou pontuação.
+                </p>
 
-                <!-- Indicadores: Grid Responsivo -->
+                <!-- Grid com os Indicadores -->
                 <div class="admin-grid-indicators">
                     
-                    <!-- 1. IDEB -->
+                    <!-- 1. EDUCAÇÃO -->
                     <div class="ind-input-box">
-                        <label><strong>🎓 IDEB (0 a 10)</strong></label>
-                        <input type="number" step="0.1" id="ind-ideb-val" placeholder="Nota (Ex: 6.5)">
+                        <label><strong>🎓 Educação</strong></label>
                         <div class="ind-meta-group">
-                            <input type="number" id="ind-ideb-ano" placeholder="Ano (Ex: 2023)">
-                            <input type="text" id="ind-ideb-fonte" placeholder="Fonte" value="INEP / IPARDES">
+                            <input type="number" step="0.0001" id="ind-edu-2022" placeholder="Nota 2022">
+                            <input type="number" step="0.0001" id="ind-edu-2023" placeholder="Nota 2023">
                         </div>
                     </div>
 
-                    <!-- 2. Alfabetização -->
+                    <!-- 2. SAÚDE -->
                     <div class="ind-input-box">
-                        <label><strong>📖 Alfabetização (%)</strong></label>
-                        <input type="number" step="0.1" id="ind-alfa-val" placeholder="% (Ex: 96.5)">
+                        <label><strong>🏥 Saúde</strong></label>
                         <div class="ind-meta-group">
-                            <input type="number" id="ind-alfa-ano" placeholder="Ano (Ex: 2022)">
-                            <input type="text" id="ind-alfa-fonte" placeholder="Fonte" value="IBGE / IPARDES">
+                            <input type="number" step="0.0001" id="ind-sau-2022" placeholder="Nota 2022">
+                            <input type="number" step="0.0001" id="ind-sau-2023" placeholder="Nota 2023">
                         </div>
                     </div>
 
-                    <!-- 3. Segurança -->
+                    <!-- 3. ECONOMIA -->
                     <div class="ind-input-box">
-                        <label><strong>🛡️ Índice de Segurança (0 a 100)</strong></label>
-                        <input type="number" step="0.1" id="ind-seg-val" placeholder="Nota (Ex: 85.0)">
+                        <label><strong>💼 Economia</strong></label>
                         <div class="ind-meta-group">
-                            <input type="number" id="ind-seg-ano" placeholder="Ano (Ex: 2023)">
-                            <input type="text" id="ind-seg-fonte" placeholder="Fonte" value="SESP-PR / IPARDES">
+                            <input type="number" step="0.0001" id="ind-eco-2022" placeholder="Nota 2022">
+                            <input type="number" step="0.0001" id="ind-eco-2023" placeholder="Nota 2023">
                         </div>
                     </div>
 
-                    <!-- 4. Leitos Hospitalares -->
+                    <!-- 4. SEGURANÇA -->
                     <div class="ind-input-box">
-                        <label><strong>🏥 Leitos SUS / 1.000 hab</strong></label>
-                        <input type="number" step="0.1" id="ind-leitos-val" placeholder="Taxa (Ex: 2.8)">
+                        <label><strong>🛡️ Segurança Pública</strong></label>
                         <div class="ind-meta-group">
-                            <input type="number" id="ind-leitos-ano" placeholder="Ano (Ex: 2023)">
-                            <input type="text" id="ind-leitos-fonte" placeholder="Fonte" value="DATASUS / IPARDES">
+                            <input type="number" step="0.0001" id="ind-seg-2022" placeholder="Nota 2022">
+                            <input type="number" step="0.0001" id="ind-seg-2023" placeholder="Nota 2023">
                         </div>
                     </div>
 
-                    <!-- 5. Saneamento -->
+                    <!-- 5. AGROPECUÁRIA -->
                     <div class="ind-input-box">
-                        <label><strong>🚰 Atendimento Saneamento (%)</strong></label>
-                        <input type="number" step="0.1" id="ind-saneamento-val" placeholder="% (Ex: 92.4)">
+                        <label><strong>🌱 Desenv. Agropecuário</strong></label>
                         <div class="ind-meta-group">
-                            <input type="number" id="ind-saneamento-ano" placeholder="Ano (Ex: 2023)">
-                            <input type="text" id="ind-saneamento-fonte" placeholder="Fonte" value="SNIS / IPARDES">
+                            <input type="number" step="0.0001" id="ind-agro-2022" placeholder="Nota 2022">
+                            <input type="number" step="0.0001" id="ind-agro-2023" placeholder="Nota 2023">
                         </div>
                     </div>
 
-                    <!-- 6. PIB per Capita -->
+                    <!-- 6. SANEAMENTO / OUTROS -->
                     <div class="ind-input-box">
-                        <label><strong>💼 PIB per Capita (R$)</strong></label>
-                        <input type="number" step="1" id="ind-pib-val" placeholder="R$ (Ex: 48500)">
+                        <label><strong>🚰 Saneamento / Infra</strong></label>
                         <div class="ind-meta-group">
-                            <input type="number" id="ind-pib-ano" placeholder="Ano (Ex: 2021)">
-                            <input type="text" id="ind-pib-fonte" placeholder="Fonte" value="IBGE / IPARDES">
-                        </div>
-                    </div>
-
-                    <!-- 7. Taxa de Emprego -->
-                    <div class="ind-input-box">
-                        <label><strong>📈 Taxa de Ocupação (%)</strong></label>
-                        <input type="number" step="0.1" id="ind-emp-val" placeholder="% (Ex: 62.0)">
-                        <div class="ind-meta-group">
-                            <input type="number" id="ind-emp-ano" placeholder="Ano (Ex: 2023)">
-                            <input type="text" id="ind-emp-fonte" placeholder="Fonte" value="CAGED / IPARDES">
+                            <input type="number" step="0.0001" id="ind-san-2022" placeholder="Nota 2022">
+                            <input type="number" step="0.0001" id="ind-san-2023" placeholder="Nota 2023">
                         </div>
                     </div>
 
@@ -141,25 +128,29 @@
             </form>
         </section>
 
-        <!-- TABELA DE CIDADES CADASTRADAS -->
+        <!-- TABELA DE CIDADES -->
         <section class="admin-card">
-            <h3><i class="fas fa-list"></i> Cidades Cadastradas na Base Oficial</h3>
-            <div class="ranking-list" style="margin-top: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+                <h3><i class="fas fa-list"></i> Cidades Cadastradas (<span id="totalCidadesContador">0</span>)</h3>
+                <input type="text" id="filtroAdminCidade" placeholder="🔍 Buscar cidade ou IBGE..." style="padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 20px; outline: none; width: 260px;" oninput="filtrarTabelaAdmin()">
+            </div>
+
+            <div class="ranking-list">
                 <table class="styled-table">
                     <thead>
                         <tr>
                             <th>IBGE</th>
                             <th>Município</th>
-                            <th>IDEB</th>
-                            <th>Segurança</th>
-                            <th>Saúde</th>
-                            <th>PIB per Capita</th>
+                            <th>Educação (2023)</th>
+                            <th>Saúde (2023)</th>
+                            <th>Economia (2023)</th>
+                            <th>Segurança (2023)</th>
                             <th>Living Score</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="adminTableBody">
-                        <tr><td colspan="8" style="text-align:center;">Carregando cidades cadastradas...</td></tr>
+                        <tr><td colspan="8" style="text-align:center;">Carregando dados da base...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -174,7 +165,6 @@
 
     <script src="script.js"></script>
     <script>
-        // Verificação imediata de segurança do admin
         document.addEventListener('DOMContentLoaded', () => {
             const role = localStorage.getItem('usuarioRole');
             if (role !== 'admin') {

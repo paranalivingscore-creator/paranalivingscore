@@ -18,11 +18,13 @@
             </div>
             <nav>
                 <ul>
-                    <li><a href="index.html" class="active">Início</a></li>
-                    <li><a href="ranking.html">Ranking</a></li>
-                    <li><a href="sobre.html">Sobre</a></li>
-                    <li><a href="login.html">Login</a></li>
-                </ul>
+       <li><a href="index.html">Início</a></li>
+        <li><a href="ranking.html">Ranking</a></li>
+        <li><a href="cidades.html">Municípios</a></li>
+        <li><a href="comparar.html">Comparar</a></li>
+        <li><a href="chat.html">Chat IA</a></li>
+        <li><a href="login.html">Login</a></li>
+    </ul>
             </nav>
         </div>
     </header>
@@ -31,15 +33,50 @@
     <main class="container">
         <section class="ranking-header">
             <h2>Melhores Cidades do Paraná</h2>
-            <p>Classificação baseada em indicadores reais e análise de IA.</p>
+            <p>Classificação baseada em indicadores reais do IPARDES e análise do Paraná Living Score.</p>
 
             <!-- Filtros Rápidos -->
             <div class="filters">
                 <span>Filtrar por:</span>
                 <button class="filter-btn active">Geral</button>
-                <button class="filter-btn">Segurança</button>
                 <button class="filter-btn">Educação</button>
-                <button class="filter-btn">Emprego</button>
+                <button class="filter-btn">Saúde</button>
+                <button class="filter-btn">Economia</button>
+            </div>
+
+            <!-- BARRA DE BUSCA EM TEMPO REAL NO RANKING -->
+            <div style="max-width: 500px; margin: 25px auto 0; position: relative;">
+                <input 
+                    type="text" 
+                    id="inputBuscaRanking" 
+                    placeholder="🔍 Buscar município no ranking (Ex: Toledo, Cascavel)..." 
+                    oninput="filtrarTabelaRanking()"
+                    style="width: 100%; padding: 12px 20px; border: 1px solid var(--border-color); border-radius: 30px; font-size: 0.95rem; outline: none; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: 0.2s;"
+                >
+            </div>
+
+            <!-- Filtros Rápidos -->
+            <div class="filters">
+                <span>Pilares:</span>
+                <button class="filter-btn active">Geral</button>
+                <button class="filter-btn">Educação</button>
+                <button class="filter-btn">Saúde</button>
+                <button class="filter-btn">Economia</button>
+                
+                <span style="margin-left: 10px;">Região:</span>
+                <select id="selectMesorregiao" onchange="aplicarFiltrosRanking()" style="padding: 8px 14px; border: 1px solid var(--border-color); border-radius: 20px; outline: none; background: white; font-weight: 600; color: var(--secondary-color); cursor: pointer;">
+                    <option value="Todas">Todas as Regiões (399 Municípios)</option>
+                    <option value="Oeste Paranaense">🌾 Oeste Paranaense</option>
+                    <option value="Norte Central Paranaense">☕ Norte Central (Maringá/Londrina)</option>
+                    <option value="Metropolitana de Curitiba">🏛️ Metropolitana de Curitiba (RMC)</option>
+                    <option value="Centro Oriental Paranaense">🌲 Campos Gerais (Ponta Grossa)</option>
+                    <option value="Sudoeste Paranaense">🚜 Sudoeste (Pato Branco/Beltrão)</option>
+                    <option value="Noroeste Paranaense">🍊 Noroeste (Umuarama/Paranavaí)</option>
+                    <option value="Norte Pioneiro Paranaense">🌄 Norte Pioneiro</option>
+                    <option value="Centro-Sul Paranaense">🌳 Centro-Sul (Guarapuava)</option>
+                    <option value="Sudeste Paranaense">⛰️ Sudeste Paranaense</option>
+                    <option value="Centro Ocidental Paranaense">🌱 Centro Ocidental (Campo Mourão)</option>
+                </select>
             </div>
         </section>
 

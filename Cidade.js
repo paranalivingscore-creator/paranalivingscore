@@ -1,23 +1,5 @@
 const mongoose = require('mongoose');
 
-// Sub-schema para armazenar um indicador completo com rastreabilidade
-const IndicadorItemSchema = new mongoose.Schema({
-    valor: { 
-        type: Number, 
-        required: true,
-        default: 0 
-    },
-    ano: { 
-        type: Number, 
-        default: () => new Date().getFullYear() 
-    },
-    fonte: { 
-        type: String, 
-        trim: true,
-        default: 'IPARDES' 
-    }
-}, { _id: false });
-
 const CidadeSchema = new mongoose.Schema({
     ibge_id: { 
         type: Number, 
@@ -26,28 +8,17 @@ const CidadeSchema = new mongoose.Schema({
     },
     nome: { 
         type: String, 
-        required: true,
+        required: true, 
         trim: true 
     },
     estado: {
         type: String,
         default: 'PR'
     },
+    // Schema flexível (Mixed) para aceitar tanto os dados do IPARDES (2022/2023) quanto campos avulsos
     indicadores: {
-        // EDUCAÇÃO
-        ideb: IndicadorItemSchema,
-        taxa_alfabetizacao: IndicadorItemSchema,
-
-        // SEGURANÇA
-        seguranca_indice: IndicadorItemSchema,
-
-        // SAÚDE E SANEAMENTO
-        saude_leitos: IndicadorItemSchema,
-        saneamento_basico: IndicadorItemSchema,
-
-        // ECONOMIA E TRABALHO
-        pib_per_capita: IndicadorItemSchema,
-        taxa_ocupacao: IndicadorItemSchema
+        type: mongoose.Schema.Types.Mixed,
+        default: {}
     },
     score_calculado: {
         type: Number,
@@ -65,6 +36,9 @@ const CidadeSchema = new mongoose.Schema({
         type: Date, 
         default: Date.now 
     }
+}, { 
+    strict: false, // Permite carregar todos os campos existentes no MongoDB sem descartar nada
+    collection: 'cidades' // Garante conexão direta com a coleção 'cidades'
 });
 
-module.exports = mongoose.model('Cidade', CidadeSchema);
+module.exports = mongoose.model('Cidade', CidadeSchema, 'cidades');
