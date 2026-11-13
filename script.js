@@ -201,25 +201,18 @@ async function salvarPerfil(event) {
 }
 
 function atualizarMenuNavegacao() {
-    const token = localStorage.getItem('token');
-    const usuarioNome = localStorage.getItem('usuarioNome');
-    const usuarioRole = localStorage.getItem('usuarioRole');
-    const navList = document.querySelector('nav ul');
-
+    const navList = document.querySelector('nav.desktop-nav ul');
     if (!navList) return;
 
-    if (token && usuarioNome) {
-        navList.innerHTML = `
-            <li><a href="index.html">Início</a></li>
-            <li><a href="ranking.html">Ranking</a></li>
-            <li><a href="cidades.html">Municípios</a></li>
-            <li><a href="comparar.html">Comparar</a></li>
-            <li><a href="chat.html">Chat IA</a></li>
-            ${usuarioRole === 'admin' ? '<li><a href="admin.html" style="color: #ffd700;"><i class="fas fa-shield-alt"></i> Admin</a></li>' : ''}
-            <li><a href="perfil.html"><i class="fas fa-user-circle"></i> ${usuarioNome.split(' ')[0]}</a></li>
-            <li><a href="javascript:void(0)" onclick="logout()" style="color: #ef4444;"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
-        `;
-    }
+    navList.innerHTML = `
+        <li><a href="index.html">Início</a></li>
+        <li><a href="ranking.html">Ranking</a></li>
+        <li><a href="cidades.html">Municípios</a></li>
+        <li><a href="comparar.html">Comparar</a></li>
+        <li><a href="chat.html">Chat IA</a></li>
+    `;
+    
+    renderizarMenuDrawerAuth();
 }
 
 // ==========================================
@@ -328,12 +321,10 @@ function aplicarFiltrosRanking() {
 
     let lista = [...dadosRankingGlobal];
 
-    // 1. Filtro por Região
     if (regiao !== 'Todas') {
         lista = lista.filter(c => c.mesorregiao && c.mesorregiao.toLowerCase().includes(regiao.toLowerCase()));
     }
 
-    // 2. Ordenação por Pilar
     if (pilar === 'Educação') {
         lista.sort((a, b) => obterValorNum(b.indicadores?.educacao) - obterValorNum(a.indicadores?.educacao));
     } else if (pilar === 'Saúde') {
@@ -346,7 +337,6 @@ function aplicarFiltrosRanking() {
 
     listaRankingFiltrada = lista.map((c, index) => ({ ...c, posicaoOficial: index + 1 }));
 
-    // Atualiza Pódio
     if (listaRankingFiltrada.length >= 1) {
         if (document.getElementById('pos1-nome')) document.getElementById('pos1-nome').innerText = listaRankingFiltrada[0].nome;
         if (document.getElementById('pos1-score')) document.getElementById('pos1-score').innerText = listaRankingFiltrada[0].score_final;
@@ -416,16 +406,11 @@ function configurarFiltrosRanking() {
 }
 
 // ==========================================
-// 5. CHAT IA (CHAT.HTML)
-// ==========================================
-
-// ==========================================
-// 5. CHAT IA COM MENU SANDUÍCHE & HISTÓRICO
+// 5. CHAT IA COM HISTÓRICO & SIDEBAR
 // ==========================================
 
 let chatConversaIdAtual = null;
 
-// Controle da Sidebar Lateral (Menu Sanduíche)
 function abrirSidebarChat() {
     document.getElementById('chatSidebarDrawer')?.classList.add('open');
     document.getElementById('chatSidebarBackdrop')?.classList.add('active');
@@ -437,7 +422,6 @@ function fecharSidebarChat() {
     document.getElementById('chatSidebarBackdrop')?.classList.remove('active');
 }
 
-// Carrega as conversas salvas no menu lateral
 async function carregarListaHistoricoDrawer() {
     const listaElem = document.getElementById('listaHistoricoConversas');
     const token = localStorage.getItem('token');
@@ -496,7 +480,6 @@ async function carregarListaHistoricoDrawer() {
     }
 }
 
-// Abre uma conversa específica do histórico
 async function carregarConversaEspecifica(id) {
     const token = localStorage.getItem('token');
     const chatWindow = document.getElementById('chatWindow');
@@ -532,7 +515,7 @@ async function carregarConversaEspecifica(id) {
         alert("Erro ao carregar a conversa selecionada.");
     }
 }
-// Inicia um novo chat limpo
+
 function iniciarNovoChat() {
     chatConversaIdAtual = null;
     const chatWindow = document.getElementById('chatWindow');
@@ -550,10 +533,8 @@ function iniciarNovoChat() {
     fecharSidebarChat();
 }
 
-
-// Exclui uma conversa específica
 async function excluirConversaEspecifica(id, event) {
-    if (event) event.stopPropagation(); // Evita abrir a conversa ao clicar em excluir
+    if (event) event.stopPropagation();
     const token = localStorage.getItem('token');
     if (!token || !confirm("Deseja excluir esta conversa do histórico?")) return;
 
@@ -574,7 +555,6 @@ async function excluirConversaEspecifica(id, event) {
     }
 }
 
-// Limpa todo o histórico de conversas
 async function limparTodoHistorico() {
     const token = localStorage.getItem('token');
     if (!token || !confirm("Tem certeza que deseja apagar TODO o seu histórico de conversas?")) return;
@@ -1208,7 +1188,6 @@ async function inicializarComparador() {
             datalist.appendChild(opt);
         });
 
-        // Inicia com duelo clássico por padrão
         dueloRapido('Maringá', 'Londrina');
     } catch (err) {
         console.error("Erro ao inicializar comparador:", err);
@@ -1253,13 +1232,11 @@ async function executarComparacao() {
         dadosComparador.c1 = data1;
         dadosComparador.c2 = data2;
 
-        // Fotos
         const [foto1, foto2] = await Promise.all([
             obterUrlFotoCidade(data1.cidade.nome),
             obterUrlFotoCidade(data2.cidade.nome)
         ]);
 
-        // Preenche Cabeçalhos
         document.getElementById('c1-nome').innerText = data1.cidade.nome;
         document.getElementById('c1-regiao').innerText = data1.ibge?.geografia?.mesorregiao || 'Paraná';
         document.getElementById('c1-score').innerText = data1.score_final;
@@ -1272,10 +1249,7 @@ async function executarComparacao() {
         document.getElementById('c2-foto').src = foto2;
         document.getElementById('th-cidade-2').innerText = data2.cidade.nome;
 
-        // Monta Tabela Comparativa com Placar de Vantagens
         montarTabelaComparativa(data1, data2);
-
-        // Gráfico Radar
         renderizarGraficoRadar(data1, data2);
 
         if (painel) painel.style.display = 'block';
@@ -1459,12 +1433,131 @@ async function pedirVereditoIA() {
     }
 }
 
+// ============================================================
+// 10. CONTROLE DO MENU SANDUÍCHE & MODO NOTURNO
+// ============================================================
+
+function abrirMenuDrawer() {
+    document.getElementById('menuDrawer')?.classList.add('open');
+    document.getElementById('menuBackdrop')?.classList.add('active');
+    renderizarMenuDrawerAuth();
+}
+
+function fecharMenuDrawer() {
+    document.getElementById('menuDrawer')?.classList.remove('open');
+    document.getElementById('menuBackdrop')?.classList.remove('active');
+}
+
+function renderizarMenuDrawerAuth() {
+    const container = document.getElementById('drawerAuthContent');
+    if (!container) return;
+
+    const token = localStorage.getItem('token');
+    const usuarioNome = localStorage.getItem('usuarioNome');
+    const usuarioRole = localStorage.getItem('usuarioRole');
+
+    if (token && usuarioNome) {
+        container.innerHTML = `
+            <div class="drawer-user-card">
+                <i class="fas fa-user-circle"></i>
+                <div>
+                    <strong style="display:block; font-size: 0.95rem;">${usuarioNome}</strong>
+                    <span style="font-size: 0.78rem; color: var(--text-muted);">${usuarioRole === 'admin' ? '🛡️ Administrador' : 'Cidadão'}</span>
+                </div>
+            </div>
+            <div class="drawer-section">
+                <h4>Minha Conta</h4>
+                <ul class="drawer-links">
+                    <li><a href="perfil.html"><i class="fas fa-cog"></i> Configurações do Perfil</a></li>
+                    ${usuarioRole === 'admin' ? '<li><a href="admin.html" style="color: #eab308;"><i class="fas fa-shield-alt"></i> Painel Administrativo</a></li>' : ''}
+                    <li><button onclick="logout()" class="btn-drawer-logout"><i class="fas fa-sign-out-alt"></i> Sair da Conta</button></li>
+                </ul>
+            </div>
+        `;
+    } else {
+        container.innerHTML = `
+            <div class="drawer-section">
+                <h4>Acesso</h4>
+                <ul class="drawer-links">
+                    <li><a href="login.html" class="btn-main" style="justify-content: center; color: white;"><i class="fas fa-sign-in-alt"></i> Entrar na Conta</a></li>
+                    <li><a href="cadastro.html" style="justify-content: center;"><i class="fas fa-user-plus"></i> Criar Nova Conta</a></li>
+                </ul>
+            </div>
+        `;
+    }
+}
+
+function alternarModoNoturno() {
+    const checkbox = document.getElementById('darkModeSwitch');
+    const ativado = checkbox ? checkbox.checked : false;
+
+    if (ativado) {
+        document.body.classList.add('dark-mode');
+        localStorage.setItem('temaEscuro', 'true');
+    } else {
+        document.body.classList.remove('dark-mode');
+        localStorage.setItem('temaEscuro', 'false');
+    }
+}
+
+function inicializarTema() {
+    const temaSalvo = localStorage.getItem('temaEscuro');
+    const checkbox = document.getElementById('darkModeSwitch');
+
+    if (temaSalvo === 'true') {
+        document.body.classList.add('dark-mode');
+        if (checkbox) checkbox.checked = true;
+    }
+}
+
+// ============================================================
+// 11. MÓDULO DE ACESSIBILIDADE (WCAG)
+// ============================================================
+
+let tamanhoFonteAtual = 100;
+
+function alterarFonte(delta) {
+    tamanhoFonteAtual += delta;
+    if (tamanhoFonteAtual < 80) tamanhoFonteAtual = 80;
+    if (tamanhoFonteAtual > 150) tamanhoFonteAtual = 150;
+
+    document.documentElement.style.fontSize = `${tamanhoFonteAtual}%`;
+    localStorage.setItem('fonteAcessibilidade', tamanhoFonteAtual);
+}
+
+function resetarFonte() {
+    tamanhoFonteAtual = 100;
+    document.documentElement.style.fontSize = '100%';
+    localStorage.setItem('fonteAcessibilidade', 100);
+}
+
+function alternarAltoContraste() {
+    document.body.classList.toggle('alto-contraste');
+    const ativado = document.body.classList.contains('alto-contraste');
+    localStorage.setItem('altoContraste', ativado ? 'true' : 'false');
+}
+
+function inicializarAcessibilidade() {
+    const fonteSalva = localStorage.getItem('fonteAcessibilidade');
+    if (fonteSalva) {
+        tamanhoFonteAtual = Number(fonteSalva);
+        document.documentElement.style.fontSize = `${tamanhoFonteAtual}%`;
+    }
+
+    const contrasteSalvo = localStorage.getItem('altoContraste');
+    if (contrasteSalvo === 'true') {
+        document.body.classList.add('alto-contraste');
+    }
+}
+
 // ==========================================
-// 10. INICIALIZADOR DE EVENTOS (DOM LOADED)
+// 12. INICIALIZADOR DE EVENTOS (DOM LOADED)
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', () => {
     atualizarMenuNavegacao();
+    inicializarTema();
+    inicializarAcessibilidade();
 
     const formCad = document.getElementById('cadastroForm');
     if (formCad) formCad.onsubmit = realizarCadastro;
@@ -1490,7 +1583,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const formChat = document.getElementById('chatForm');
     if (formChat) {
         formChat.onsubmit = enviarMensagemChat;
-        carregarHistoricoChat();
+        if (typeof carregarHistoricoChat === 'function') {
+            carregarHistoricoChat();
+        }
     }
 
     const formAdmin = document.getElementById('adminCidadeForm');
@@ -1501,5 +1596,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const heroForm = document.getElementById('heroAiForm');
     if (heroForm) {
         heroForm.onsubmit = enviarPerguntaHero;
+    }
+
+    if (document.getElementById('listaSugestoesCidades') && document.getElementById('painelDetalhesCidade')) {
+        inicializarPaginaCidades();
+    }
+
+    if (document.getElementById('painelConfronto') || document.getElementById('comp-cidade-1')) {
+        inicializarComparador();
     }
 });
