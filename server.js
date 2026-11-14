@@ -7,19 +7,11 @@ const axios = require('axios');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Modelos do Banco e Configurações
+// Modelos do Banco e Configurações (SEM DEPENDÊNCIAS FALTANDO)
 const Cidade = require('./models/Cidade');
 const Usuario = require('./models/Usuario');
 const Conversa = require('./models/Conversa');
 const DICIONARIO_INDICADORES = require('./config/dicionarioIndicadores');
-
-// Modelo opcional do IBGE caso exista o arquivo
-let IBGEMunicipio = null;
-try {
-    IBGEMunicipio = require('./models/IBGEMunicipio');
-} catch (e) {
-    console.log("ℹ️ Modelo IBGEMunicipio não carregado, usando fallback nativo.");
-}
 
 const app = express();
 app.use(cors());
@@ -104,7 +96,7 @@ const verificarAdmin = (req, res, next) => {
     });
 };
 
-// 4. FUNÇÃO DO CÁLCULO DO SCORE (Média Ponderada Inteligente)
+// 4. FUNÇÃO DO CÁLCULO DO SCORE (Média Ponderada)
 function extrairValor(campo) {
     if (campo === undefined || campo === null) return 0;
     if (typeof campo === 'number') return campo;
@@ -151,7 +143,7 @@ function calcularLivingScore(indicadores) {
 // ==========================================
 
 app.get('/', (req, res) => {
-    res.send('🚀 Servidor do Paraná Living Score está online e operante!');
+    res.send('🚀 Servidor do Paraná Living Score está online e operante no Render!');
 });
 
 // Listar todas as cidades
@@ -169,26 +161,14 @@ app.get('/api/cidades', async (req, res) => {
     }
 });
 
-// Ranking Oficial com Mesorregião
+// Ranking Oficial
 app.get('/api/cidades/ranking', async (req, res) => {
     try {
         const cidades = await Cidade.find();
-        let ibgeMap = new Map();
-
-        if (IBGEMunicipio) {
-            try {
-                const ibges = await IBGEMunicipio.find().select('ibge_id nome geografia');
-                ibges.forEach(i => {
-                    if (i.ibge_id) ibgeMap.set(String(i.ibge_id), i.geografia?.mesorregiao || '');
-                    if (i.nome) ibgeMap.set(i.nome.toLowerCase(), i.geografia?.mesorregiao || '');
-                });
-            } catch (errIbge) {}
-        }
-
         const cidadesComScore = cidades.map(c => {
             const obj = c.toObject();
             obj.score_final = parseFloat(calcularLivingScore(c.indicadores));
-            obj.mesorregiao = ibgeMap.get(String(c.ibge_id)) || ibgeMap.get(c.nome?.toLowerCase()) || 'Paraná';
+            obj.mesorregiao = 'Paraná';
             return obj;
         });
 
@@ -199,22 +179,18 @@ app.get('/api/cidades/ranking', async (req, res) => {
     }
 });
 
-// ==========================================
-// ROTA UNIFICADA DE DETALHES DO MUNICÍPIO (Para cidades.html e comparar.html)
-// ==========================================
+// Rota de Ficha Completa (cidades.html e comparar.html)
 app.get('/api/cidades/detalhes/:termo', async (req, res) => {
     try {
         const termoBruto = decodeURIComponent(req.params.termo).trim();
         const ehNumero = !isNaN(Number(termoBruto));
 
-        // Busca flexível no MongoDB (por ID ou por Nome com regex insensível a maiúsculas)
         let query = ehNumero 
             ? { ibge_id: Number(termoBruto) } 
             : { nome: { $regex: new RegExp(`^${termoBruto.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')}$`, 'i') } };
 
         let cidade = await Cidade.findOne(query);
 
-        // Se não achou na busca exata, tenta buscar por aproximação
         if (!cidade && !ehNumero) {
             cidade = await Cidade.findOne({ nome: { $regex: new RegExp(termoBruto, 'i') } });
         }
@@ -223,7 +199,7 @@ app.get('/api/cidades/detalhes/:termo', async (req, res) => {
             return res.status(404).json({ erro: `Município "${termoBruto}" não encontrado na base de dados.` });
         }
 
-        // 1. Clima em tempo real (OpenWeatherMap)
+        // Clima em tempo real (OpenWeatherMap)
         let climaDados = null;
         if (process.env.WEATHER_API_KEY) {
             try {
@@ -238,33 +214,30 @@ app.get('/api/cidades/detalhes/:termo', async (req, res) => {
             } catch (errWeather) {}
         }
 
-        // 2. Metadados do IBGE
-        let ibgeInfo = null;
-        if (IBGEMunicipio) {
-            try {
-                ibgeInfo = await IBGEMunicipio.findOne({
-                    $or: [
-                        { ibge_id: cidade.ibge_id },
-                        { nome: new RegExp(`^${cidade.nome}$`, 'i') }
-                    ]
-                });
-            } catch (e) {}
-        }
+        // Metadados do IBGE
+        let ibgeInfo = {
+            geografia: {
+                mesorregiao: "Oeste Paranaense",
+                microrregiao: "Toledo",
+                regiao_imediata: "Toledo",
+                regiao_intermediaria: "Cascavel"
+            },
+            demografia: {
+                populacao_censo_2022: 36808,
+                area_km2: 846.6
+            }
+        };
 
-        // Fallback geográfico caso não tenha no banco local
-        if (!ibgeInfo) {
-            ibgeInfo = {
-                geografia: {
-                    mesorregiao: "Oeste Paranaense",
-                    microrregiao: "Toledo",
-                    regiao_imediata: "Toledo",
-                    regiao_intermediaria: "Cascavel"
-                },
-                demografia: {
-                    populacao_censo_2022: 36808,
-                    area_km2: 846.6
+        if (cidade.ibge_id) {
+            try {
+                const ibgeRes = await axios.get(`https://servicodados.ibge.gov.br/api/v1/localidades/municipios/${cidade.ibge_id}`, { timeout: 3000 });
+                if (ibgeRes.data) {
+                    ibgeInfo.geografia.mesorregiao = ibgeRes.data.microrregiao?.mesorregiao?.nome || ibgeInfo.geografia.mesorregiao;
+                    ibgeInfo.geografia.microrregiao = ibgeRes.data.microrregiao?.nome || ibgeInfo.geografia.microrregiao;
+                    ibgeInfo.geografia.regiao_imediata = ibgeRes.data['regiao-imediata']?.nome || ibgeInfo.geografia.regiao_imediata;
+                    ibgeInfo.geografia.regiao_intermediaria = ibgeRes.data['regiao-imediata']?.['regiao-intermediaria']?.nome || ibgeInfo.geografia.regiao_intermediaria;
                 }
-            };
+            } catch (e) {}
         }
 
         const scoreCalculado = calcularLivingScore(cidade.indicadores);
@@ -273,7 +246,7 @@ app.get('/api/cidades/detalhes/:termo', async (req, res) => {
             cidade: cidade.toObject(),
             score_final: scoreCalculado,
             clima: climaDados,
-            ibge: ibgeInfo ? (ibgeInfo.toObject ? ibgeInfo.toObject() : ibgeInfo) : null
+            ibge: ibgeInfo
         });
 
     } catch (err) {
@@ -282,7 +255,7 @@ app.get('/api/cidades/detalhes/:termo', async (req, res) => {
     }
 });
 
-// Buscar cidade simples + Clima + Relatório IA
+// Buscar cidade simples + Clima
 app.get('/api/cidades/busca/:nome', async (req, res) => {
     try {
         const nomeCidade = decodeURIComponent(req.params.nome).trim();
