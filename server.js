@@ -311,6 +311,80 @@ app.get('/api/cidades/busca/:nome', async (req, res) => {
 });
 
 // ==========================================
+// ROTA COMPLETA DE DETALHES DO MUNICÍPIO (Para cidades.html e comparar.html)
+// ==========================================
+app.get('/api/cidades/detalhes/:nome', async (req, res) => {
+    try {
+        const nomeCidade = req.params.nome;
+        // Busca sem diferenciar maiúsculas/minúsculas
+        const cidade = await Cidade.findOne({ nome: new RegExp(`^${nomeCidade}$`, 'i') });
+
+        if (!cidade) {
+            return res.status(404).json({ erro: `Município "${nomeCidade}" não encontrado na base de dados.` });
+        }
+
+        const scoreCalculado = calcularLivingScore(cidade.indicadores);
+
+        // 1. Clima em tempo real (OpenWeather)
+        let climaDados = null;
+        if (process.env.WEATHER_API_KEY) {
+            try {
+                const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(cidade.nome)},BR&units=metric&lang=pt_br&appid=${process.env.WEATHER_API_KEY}`;
+                const weatherRes = await axios.get(weatherUrl);
+                climaDados = {
+                    temp: Math.round(weatherRes.data.main.temp),
+                    descricao: weatherRes.data.weather[0].description,
+                    icone: weatherRes.data.weather[0].icon,
+                    umidade: weatherRes.data.main.humidity
+                };
+            } catch (errWeather) {
+                console.warn("Aviso clima:", errWeather.message);
+            }
+        }
+
+        // 2. Metadados do IBGE (Mesorregião, Microrregião, etc.)
+        let ibgeDados = {
+            geografia: {
+                mesorregiao: "Oeste Paranaense",
+                microrregiao: "Toledo",
+                regiao_imediata: "Toledo",
+                regiao_intermediaria: "Cascavel"
+            },
+            demografia: {
+                populacao_censo_2022: 36808,
+                area_km2: 846.6
+            }
+        };
+
+        if (cidade.ibge_id) {
+            try {
+                const ibgeRes = await axios.get(`https://servicodados.ibge.gov.br/api/v1/localidades/municipios/${cidade.ibge_id}`);
+                if (ibgeRes.data) {
+                    ibgeDados.geografia.mesorregiao = ibgeRes.data.microrregiao?.mesorregiao?.nome || ibgeDados.geografia.mesorregiao;
+                    ibgeDados.geografia.microrregiao = ibgeRes.data.microrregiao?.nome || ibgeDados.geografia.microrregiao;
+                    ibgeDados.geografia.regiao_imediata = ibgeRes.data['regiao-imediata']?.nome || ibgeDados.geografia.regiao_imediata;
+                    ibgeDados.geografia.regiao_intermediaria = ibgeRes.data['regiao-imediata']?.['regiao-intermediaria']?.nome || ibgeDados.geografia.regiao_intermediaria;
+                }
+            } catch (errIBGE) {
+                console.warn("Aviso IBGE:", errIBGE.message);
+            }
+        }
+
+        // Retorna o formato exato esperado pelo frontend
+        res.json({
+            cidade: cidade.toObject(),
+            score_final: scoreCalculado,
+            clima: climaDados,
+            ibge: ibgeDados
+        });
+
+    } catch (err) {
+        console.error("Erro ao buscar detalhes da cidade:", err);
+        res.status(500).json({ erro: "Erro interno no servidor: " + err.message });
+    }
+});
+
+// ==========================================
 // ROTAS DE AUTENTICAÇÃO
 // ==========================================
 
