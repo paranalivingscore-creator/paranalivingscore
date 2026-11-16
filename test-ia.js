@@ -1,56 +1,59 @@
 require('dotenv').config();
+const axios = require('axios');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-async function testarModelosDisponiveis() {
-    console.log("==================================================");
-    console.log("🔍 TESTE DE MODELOS DA IA - PARANÁ LIVING SCORE");
-    console.log("==================================================");
-    console.log("Chave carregada do .env:", process.env.GEMINI_KEY ? `${process.env.GEMINI_KEY.substring(0, 8)}...` : "❌ NÃO ENCONTRADA");
+function comTimeout(promise, ms) {
+    return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error(`Timeout (${ms / 1000}s)`)), ms))
+    ]);
+}
+
+async function testarTodosModelosTexto() {
+    const key = (process.env.GEMINI_KEY || "").trim();
+    const res = await axios.get(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+
+    const modelosTexto = (res.data.models || [])
+        .filter(m => m.supportedGenerationMethods?.includes("generateContent"))
+        .map(m => m.name.replace("models/", ""))
+        .filter(nome =>
+            !nome.includes("tts") &&
+            !nome.includes("image") &&
+            !nome.includes("audio") &&
+            !nome.includes("robotics") &&
+            !nome.includes("computer-use") &&
+            !nome.includes("deep-research") &&
+            !nome.includes("2.5") &&
+            !nome.includes("2.0") &&
+            !nome.includes("1.5")
+        );
+
+    console.log(`📋 Testando ${modelosTexto.length} modelos (máx. 6s cada):`);
+    console.log(modelosTexto.join(", "));
     console.log("--------------------------------------------------");
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
+    const genAI = new GoogleGenerativeAI(key);
+    const validos = [];
 
-    // Lista de modelos para testar
-    const modelosParaTestar = [
-        "gemini-1.5-flash",
-        "gemini-1.5-flash-latest",
-        "gemini-1.5-flash-8b",
-        "gemini-1.5-pro",
-        "gemini-1.5-pro-latest",
-        "gemini-pro",
-        "gemma-2-27b-it",
-        "gemma-2-9b-it"
-    ];
-
-    let algumFuncionou = false;
-    const modelosValidos = [];
-
-    for (const nomeModelo of modelosParaTestar) {
-        process.stdout.write(`⏳ Testando modelo: [${nomeModelo}] ... `);
+    for (const nomeModelo of modelosTexto) {
+        process.stdout.write(`⏳ [${nomeModelo}] ... `);
         try {
             const model = genAI.getGenerativeModel({ model: nomeModelo });
-            const result = await model.generateContent("Responda apenas com a palavra: OK");
-            const response = await result.response;
-            const texto = response.text().trim();
-
-            console.log(`✅ SUCESSO! Resposta: "${texto}"`);
-            modelosValidos.push(nomeModelo);
-            algumFuncionou = true;
-        } catch (erro) {
-            console.log(`❌ FALHOU`);
-            console.log(`   Motivo: ${erro.message}`);
+            const result = await comTimeout(
+                model.generateContent("Responda apenas com a palavra: OK"),
+                6000
+            );
+            const texto = result.response.text().trim().replace(/\n/g, " ");
+            console.log(`✅ OK -> "${texto.substring(0, 80)}"`);
+            validos.push(nomeModelo);
+        } catch (err) {
+            const msgCurta = err.message.split('\n')[0].substring(0, 90);
+            console.log(`❌ ${msgCurta}`);
         }
     }
 
-    console.log("\n==================================================");
-    if (algumFuncionou) {
-        console.log("🎉 MODELOS QUE FUNCIONARAM COM SUCESSO:");
-        modelosValidos.forEach(m => console.log(`   👉 "${m}"`));
-        console.log("\nCopie o primeiro da lista acima e coloque no server.js!");
-    } else {
-        console.log("⚠️ NENHUM modelo respondeu com sucesso.");
-    }
-    console.log("==================================================");
+    console.log("\n🎉 MODELOS QUE FUNCIONARAM:");
+    validos.forEach(m => console.log(`   👉 "${m}"`));
 }
 
-testarModelosDisponiveis();
+testarTodosModelosTexto();

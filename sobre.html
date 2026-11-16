@@ -4,22 +4,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paraná Living Score - Inteligência Urbana</title>
+    <meta name="description" content="Conheça o Paraná Living Score, uma plataforma inteligente que utiliza dados públicos e inteligência artificial para analisar a qualidade de vida nos municípios do Paraná.">
+    <title>Sobre | Paraná Living Score</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
-<body>
-   <!-- Header Principal com Menu Sanduíche -->
+<body class="about-page">
+
     <!-- Header Principal -->
     <header>
         <div class="container">
-            <!-- Logo à Esquerda -->
             <div class="logo">
                 <h1>Paraná Living <span>Score</span></h1>
             </div>
 
-            <!-- Navegação e Menu Sanduíche à Direita -->
             <div class="header-right-group">
                 <nav class="desktop-nav">
                     <ul>
@@ -42,35 +41,30 @@
         </div>
     </header>
 
-    <!-- Fundo Escurecido (Backdrop) -->
+    <!-- Fundo do Menu -->
     <div class="menu-drawer-backdrop" id="menuBackdrop" onclick="fecharMenuDrawer()"></div>
 
-    <!-- MENU SANDUÍCHE LATERAL (DRAWER) -->
+    <!-- Menu Lateral -->
     <aside class="menu-drawer" id="menuDrawer">
         <div class="menu-drawer-header">
             <h3><i class="fas fa-bars"></i> Menu</h3>
             <button class="btn-close-drawer" onclick="fecharMenuDrawer()"><i class="fas fa-times"></i></button>
         </div>
 
-        <!-- Área Dinâmica de Autenticação / Conta -->
-        <div id="drawerAuthContent">
-            <!-- O JavaScript injetará Login/Cadastro ou Minha Conta/Sair aqui -->
-        </div>
+        <div id="drawerAuthContent"></div>
 
-        <!-- Seção de Navegação Completa -->
         <div class="drawer-section">
             <h4>Navegação</h4>
             <ul class="drawer-links">
                 <li><a href="index.html"><i class="fas fa-home"></i> Início</a></li>
                 <li><a href="ranking.html"><i class="fas fa-trophy"></i> Ranking Oficial</a></li>
-                <li><a href="cidades.html"><i class="fas fa-city"></i> Municípios do Paraná</a></li>
-                <li><a href="comparar.html"><i class="fas fa-balance-scale"></i> Comparador de Cidades</a></li>
+                <li><a href="cidades.html"><i class="fas fa-city"></i> Municípios</a></li>
+                <li><a href="comparar.html"><i class="fas fa-balance-scale"></i> Comparar</a></li>
                 <li><a href="chat.html"><i class="fas fa-robot"></i> Consultor IA</a></li>
                 <li><a href="sobre.html"><i class="fas fa-info-circle"></i> Sobre o Projeto</a></li>
             </ul>
         </div>
 
-        <!-- Seção de Aparência / Dark Mode -->
         <div class="drawer-section">
             <h4>Aparência</h4>
             <div class="dark-mode-toggle-box">
@@ -82,63 +76,9 @@
             </div>
         </div>
 
-        <!-- Seção de Acessibilidade -->
         <div class="drawer-section">
             <h4>Acessibilidade</h4>
-            <div style="display: flex; gap: 6px; margin-bottom: 8px;">
-                <button class="acc-action-btn" onclick="alterarFonte(10)" title="Aumentar Fonte"><i class="fas fa-font"></i> A+</button>
-                <button class="acc-action-btn" onclick="alterarFonte(-10)" title="Diminuir Fonte"><i class="fas fa-font"></i> A-</button>
-                <button class="acc-action-btn" onclick="resetarFonte()" title="Tamanho Padrão">Padrão</button>
-            </div>
-            <button class="acc-action-btn" onclick="alternarAltoContraste()">
-                <i class="fas fa-adjust"></i> Alternar Alto Contraste
-            </button>
-        </div>
-    </aside>
-    </header>
-
-    <!-- Fundo Escurecido (Backdrop) -->
-    <div class="menu-drawer-backdrop" id="menuBackdrop" onclick="fecharMenuDrawer()"></div>
-
-    <!-- MENU SANDUÍCHE LATERAL (DRAWER) -->
-    <aside class="menu-drawer" id="menuDrawer">
-        <div class="menu-drawer-header">
-            <h3><i class="fas fa-bars"></i> Menu</h3>
-            <button class="btn-close-drawer" onclick="fecharMenuDrawer()"><i class="fas fa-times"></i></button>
-        </div>
-
-        <!-- Área Dinâmica de Autenticação / Conta -->
-        <div id="drawerAuthContent">
-            <!-- O JavaScript vai injetar Login/Cadastro ou Minha Conta/Sair aqui -->
-        </div>
-
-        <!-- Seção de Navegação Rápida -->
-        <div class="drawer-section">
-            <h4>Navegação</h4>
-            <ul class="drawer-links">
-                <li><a href="index.html"><i class="fas fa-home"></i> Início</a></li>
-                <li><a href="ranking.html"><i class="fas fa-trophy"></i> Ranking Oficial</a></li>
-                <li><a href="chat.html"><i class="fas fa-robot"></i> Consultor IA</a></li>
-                <li><a href="sobre.html"><i class="fas fa-info-circle"></i> Sobre o Projeto</a></li>
-            </ul>
-        </div>
-
-        <!-- Seção de Preferências / Modo Noturno -->
-        <div class="drawer-section">
-            <h4>Aparência</h4>
-            <div class="dark-mode-toggle-box">
-                <span id="dark-mode-label"><i class="fas fa-moon"></i> Modo Escuro</span>
-                <label class="switch">
-                    <input type="checkbox" id="darkModeSwitch" onchange="alternarModoNoturno()">
-                    <span class="slider"></span>
-                </label>
-            </div>
-        </div>
-
-        <!-- Seção de Acessibilidade -->
-        <div class="drawer-section">
-            <h4>Acessibilidade</h4>
-            <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+            <div class="about-accessibility">
                 <button class="acc-action-btn" onclick="alterarFonte(10)"><i class="fas fa-font"></i> A+</button>
                 <button class="acc-action-btn" onclick="alterarFonte(-10)"><i class="fas fa-font"></i> A-</button>
                 <button class="acc-action-btn" onclick="resetarFonte()">Padrão</button>
@@ -148,89 +88,370 @@
             </button>
         </div>
     </aside>
-    </header>
 
+    <main class="container about-container">
 
-    <main class="container">
-        <!-- Introdução do Projeto -->
-        <section class="about-section">
-            <div class="about-text">
-                <h2>Sobre o Projeto</h2>
-                <p>O <strong>Paraná Living Score</strong> é uma plataforma inteligente desenvolvida como Projeto Final
-                    de Curso (PFC) pelos alunos do curso Técnico em Informática para Internet do <strong>IFPR - Campus
-                        Assis Chateaubriand</strong>.</p>
-                <p>Nosso objetivo é transformar dados públicos complexos em informações acessíveis e compreensíveis para
-                    qualquer cidadão que deseje escolher uma cidade para morar, estudar ou investir no estado do Paraná.
+        <!-- APRESENTAÇÃO -->
+        <section class="about-hero">
+            <div class="about-hero-content">
+                <span class="about-label">
+                    <i class="fas fa-info-circle"></i>
+                    CONHEÇA NOSSO PROJETO
+                </span>
+                <h2>Sobre o <span>Paraná Living Score</span></h2>
+                <p>
+                    Uma plataforma inteligente que transforma dados públicos em informações acessíveis,
+                    ajudando cidadãos a conhecer, analisar e comparar os 399 municípios do Paraná.
+                </p>
+                <div class="about-hero-tags">
+                    <span><i class="fas fa-chart-line"></i> Análise de dados</span>
+                    <span><i class="fas fa-brain"></i> Inteligência Artificial</span>
+                    <span><i class="fas fa-map-marked-alt"></i> 399 Municípios do PR</span>
+                </div>
+            </div>
+
+            <div class="about-hero-icon">
+                <i class="fas fa-city"></i>
+            </div>
+        </section>
+
+        <!-- 01. APRESENTAÇÃO -->
+        <section class="about-introduction">
+            <div class="about-section-heading">
+                <span>01 — APRESENTAÇÃO</span>
+                <h2>Uma nova perspectiva sobre onde morar</h2>
+            </div>
+
+            <div class="about-intro-content">
+                <p>
+                    O <strong>Paraná Living Score (PLS)</strong> é uma plataforma inteligente desenvolvida como
+                    Projeto Final de Curso (PFC) pelos estudantes do curso Técnico em Informática para Internet do
+                    <strong>
+                        <a href="https://assis.ifpr.edu.br/" target="_blank" rel="noopener noreferrer">
+                            IFPR — Campus Assis Chateaubriand
+                        </a>
+                    </strong>.
+                </p>
+                <p>
+                    O projeto transforma indicadores públicos e informações municipais em conhecimento acessível,
+                    permitindo que qualquer cidadão explore a qualidade de vida nos municípios paranaenses através de
+                    rankings, fichas territoriais, gráficos interativos, comparador direto e análises com a assistente <strong>Capiá IA</strong>.
                 </p>
             </div>
-            <div class="about-image">
-                <i class="fas fa-microchip"></i>
+        </section>
+
+        <!-- 02. PROPÓSITO -->
+        <section class="about-mission">
+            <div class="about-section-heading">
+                <span>02 — PROPÓSITO</span>
+                <h2>Mais informação, melhores decisões</h2>
+                <p>Acreditamos que o acesso claro a dados públicos é essencial para compreender a realidade dos municípios.</p>
+            </div>
+
+            <div class="mission-grid">
+                <article class="mission-card">
+                    <div class="mission-icon"><i class="fas fa-bullseye"></i></div>
+                    <h3>Nossa missão</h3>
+                    <p>Democratizar o acesso a indicadores municipais, transformando números estatísticos em informação clara e útil para toda a população.</p>
+                </article>
+
+                <article class="mission-card ods-card">
+                    <div class="mission-icon"><i class="fas fa-globe-americas"></i></div>
+                    <h3>ODS 11</h3>
+                    <p>Alinhamento ao Objetivo de Desenvolvimento Sustentável 11 da ONU: tornar as cidades e comunidades mais inclusivas, seguras e sustentáveis.</p>
+                </article>
+
+                <article class="mission-card">
+                    <div class="mission-icon"><i class="fas fa-chart-line"></i></div>
+                    <h3>Impacto social</h3>
+                    <p>Auxiliar cidadãos, estudantes e investidores na escolha de onde morar, estudar ou empreender com base em evidências.</p>
+                </article>
             </div>
         </section>
 
-        <!-- Missão e ODS -->
-        <section class="goals-grid">
-            <div class="goal-card">
-                <i class="fas fa-bullseye"></i>
-                <h3>Nossa Missão</h3>
-                <p>Democratizar o acesso a indicadores urbanos através do uso ético de Inteligência Artificial e análise
-                    de dados precisos.</p>
+        <!-- 03. METODOLOGIA E FÓRMULA OFICIAL -->
+        <section class="about-process">
+            <div class="about-section-heading">
+                <span>03 — METODOLOGIA E CÁLCULO</span>
+                <h2>Como é calculado o Paraná Living Score?</h2>
+                <p>O índice varia de <strong>0 a 100 pontos</strong> e é calculado por média ponderada entre os quatro pilares oficiais.</p>
             </div>
-            <div class="goal-card">
-                <i class="fas fa-globe-americas"></i>
-                <h3>ODS 11</h3>
-                <p>Alinhado ao objetivo de Cidades e Comunidades Sustentáveis, promovendo o acesso à informação para
-                    assentamentos humanos inclusivos e seguros.</p>
+
+            <!-- Fórmula Oficial em Destaque -->
+            <div class="formula-box">
+                <div class="formula-header">
+                    <span class="formula-badge"><i class="fas fa-calculator"></i> Fórmula Matemática Oficial</span>
+                </div>
+
+                <div class="formula-equation">
+                    <span>Living Score</span>
+                    <span class="eq-op">=</span>
+                    <div class="eq-fraction">
+                        <div class="eq-num">
+                            (Segurança × <strong>3</strong>) + (Educação × <strong>3</strong>) + (Saúde × <strong>2</strong>) + (Economia × <strong>2</strong>)
+                        </div>
+                        <div class="eq-den">10</div>
+                    </div>
+                </div>
+
+                <div class="formula-weights">
+                    <span class="weight-pill w-seg"><i class="fas fa-shield-alt"></i> Segurança: Peso 3 (30%)</span>
+                    <span class="weight-pill w-edu"><i class="fas fa-graduation-cap"></i> Educação: Peso 3 (30%)</span>
+                    <span class="weight-pill w-sau"><i class="fas fa-heartbeat"></i> Saúde: Peso 2 (20%)</span>
+                    <span class="weight-pill w-eco"><i class="fas fa-chart-pie"></i> Economia: Peso 2 (20%)</span>
+                </div>
+
+                <p class="formula-rule">
+                    <i class="fas fa-check-circle"></i>
+                    <strong>Critério de justiça no ranking:</strong> Cada pilar é normalizado na escala de 0 a 100 pontos.
+                    Municípios que não possuem os quatro pilares informados no banco de dados <strong>não recebem pontuação artificial</strong>
+                    e não entram na disputa do ranking oficial principal (podendo ser visualizados apenas pelo filtro opcional com o aviso <em>"Dados não informados"</em>).
+                </p>
             </div>
-            <div class="goal-card">
-                <i class="fas fa-chart-line"></i>
-                <h3>Impacto Social</h3>
-                <p>Auxiliar no planejamento urbano e na tomada de decisão baseada em evidências, fugindo de percepções
-                    subjetivas.</p>
+
+            <div class="process-grid">
+                <article class="process-card">
+                    <div class="process-number">01</div>
+                    <div class="process-icon"><i class="fas fa-database"></i></div>
+                    <h3>Coleta oficial</h3>
+                    <p>Integração de indicadores públicos do IPARDES, IBGE, INEP e órgãos estaduais para a base do sistema.</p>
+                </article>
+
+                <article class="process-card">
+                    <div class="process-number">02</div>
+                    <div class="process-icon"><i class="fas fa-calculator"></i></div>
+                    <h3>Normalização e cálculo</h3>
+                    <p>Conversão para escala 0–100 e aplicação dos pesos 3, 3, 2 e 2 para gerar o Living Score municipal.</p>
+                </article>
+
+                <article class="process-card">
+                    <div class="process-number">03</div>
+                    <div class="process-icon"><i class="fas fa-robot"></i></div>
+                    <h3>Interpretação com IA</h3>
+                    <p>A Capiá IA analisa os indicadores armazenados e auxilia o usuário com explicações e comparações contextualizadas.</p>
+                </article>
             </div>
         </section>
 
-        <!-- Tecnologias Utilizadas -->
-        <section class="tech-section">
-            <h2>Stack Tecnológica</h2>
-            <div class="tech-icons">
-                <div class="tech-item"><i class="fab fa-html5"></i> <span>HTML5</span></div>
-                <div class="tech-item"><i class="fab fa-css3-alt"></i> <span>CSS3</span></div>
-                <div class="tech-item"><i class="fab fa-js"></i> <span>JavaScript</span></div>
-                <div class="tech-item"><i class="fas fa-database"></i> <span>MongoDB</span></div>
+        <!-- 04. PILARES -->
+        <section class="about-pillars">
+            <div class="about-section-heading">
+                <span>04 — OS QUATRO PILARES</span>
+                <h2>Dimensões avaliadas no índice</h2>
+                <p>Os quatro eixos que compõem a pontuação oficial de qualidade de vida.</p>
+            </div>
+
+            <div class="pillars-grid">
+                <article class="pillar-card">
+                    <div class="pillar-icon security"><i class="fas fa-shield-alt"></i></div>
+                    <h3>Segurança (Peso 3)</h3>
+                    <p>Indicadores relacionados à segurança pública e tranquilidade urbana nos municípios paranaenses.</p>
+                </article>
+
+                <article class="pillar-card">
+                    <div class="pillar-icon education"><i class="fas fa-graduation-cap"></i></div>
+                    <h3>Educação (Peso 3)</h3>
+                    <p>Índices educacionais municipais, desempenho escolar (como IDEB) e indicadores do IPARDES.</p>
+                </article>
+
+                <article class="pillar-card">
+                    <div class="pillar-icon health"><i class="fas fa-heartbeat"></i></div>
+                    <h3>Saúde (Peso 2)</h3>
+                    <p>Indicadores de saúde pública, infraestrutura de atendimento e condições sanitárias.</p>
+                </article>
+
+                <article class="pillar-card">
+                    <div class="pillar-icon economy"><i class="fas fa-chart-pie"></i></div>
+                    <h3>Economia (Peso 2)</h3>
+                    <p>Atividade econômica municipal, renda, emprego e dinamismo produtivo regional.</p>
+                </article>
             </div>
         </section>
 
-        <!-- Equipe -->
-        <section class="team-section">
-            <h2>Nossa Equipe</h2>
-            <p>Estudantes do 3º ano do curso Técnico em Informática para Internet.</p>
+        <!-- 05. TRANSPARÊNCIA, FONTES E AVISOS IMPORTANTES -->
+        <section class="about-sources">
+            <div class="about-section-heading">
+                <span>05 — TRANSPARÊNCIA E AVISOS</span>
+                <h2>Fontes oficiais e limitações da plataforma</h2>
+                <p>Transparência sobre a origem dos números, o funcionamento da Inteligência Artificial e a integridade dos dados.</p>
+            </div>
+
+            <div class="sources-grid">
+                <article class="source-card">
+                    <div class="source-icon"><i class="fas fa-landmark"></i></div>
+                    <div>
+                        <h3>IPARDES</h3>
+                        <p>Instituto Paranaense de Desenvolvimento Econômico e Social. Principal base para os índices municipais socioeconômicos.</p>
+                        <a href="https://www.ipardes.pr.gov.br/" target="_blank" rel="noopener noreferrer">Acessar instituição <i class="fas fa-external-link-alt"></i></a>
+                    </div>
+                </article>
+
+                <article class="source-card">
+                    <div class="source-icon"><i class="fas fa-chart-bar"></i></div>
+                    <div>
+                        <h3>IBGE</h3>
+                        <p>Instituto Brasileiro de Geografia e Estatística. Dados demográficos, área territorial, malha cartográfica e divisão regional.</p>
+                        <a href="https://www.ibge.gov.br/" target="_blank" rel="noopener noreferrer">Acessar instituição <i class="fas fa-external-link-alt"></i></a>
+                    </div>
+                </article>
+
+                <article class="source-card">
+                    <div class="source-icon"><i class="fas fa-school"></i></div>
+                    <div>
+                        <h3>INEP</h3>
+                        <p>Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira, referência nacional em indicadores educacionais.</p>
+                        <a href="https://www.gov.br/inep/pt-br" target="_blank" rel="noopener noreferrer">Acessar instituição <i class="fas fa-external-link-alt"></i></a>
+                    </div>
+                </article>
+
+                <article class="source-card">
+                    <div class="source-icon"><i class="fas fa-shield-alt"></i></div>
+                    <div>
+                        <h3>SESP-PR / IPARDES</h3>
+                        <p>Secretaria da Segurança Pública do Paraná e bases integradas do IPARDES utilizadas para compor o pilar de segurança pública.</p>
+                        <a href="https://www.seguranca.pr.gov.br/" target="_blank" rel="noopener noreferrer">Acessar instituição <i class="fas fa-external-link-alt"></i></a>
+                    </div>
+                </article>
+            </div>
+
+            <!-- Avisos sobre IA e Erros de Dados -->
+            <div class="transparency-alerts-grid">
+                <div class="alert-notice alert-ia">
+                    <div class="alert-notice-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div>
+                        <h4>Atenção sobre a Inteligência Artificial (Capiá IA)</h4>
+                        <p>
+                            A <strong>Capiá IA</strong> utiliza modelos de inteligência artificial generativa que <strong>podem cometer erros</strong>,
+                            interpretar informações de forma incompleta ou trazer dados externos sujeitos a alterações.
+                            Suas respostas têm caráter exclusivamente informativo e <strong>não substituem</strong> os dados oficiais das instituições públicas.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="alert-notice alert-data">
+                    <div class="alert-notice-icon"><i class="fas fa-bug"></i></div>
+                    <div>
+                        <h4>Encontrou algum erro ou dado desatualizado?</h4>
+                        <p>
+                            Como trabalhamos com centenas de municípios e múltiplas fontes públicas, inconsistências pontuais podem acontecer.
+                            Caso identifique qualquer dado errado, ausente ou divergente no sistema, <strong>entre em contato com a nossa equipe</strong> para analisarmos e corrigirmos na base oficial.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 06. TECNOLOGIAS -->
+        <section class="about-technologies">
+            <div class="about-section-heading">
+                <span>06 — DESENVOLVIMENTO</span>
+                <h2>Tecnologias utilizadas</h2>
+                <p>Ferramentas integradas no front-end, back-end, banco de dados e serviços em nuvem.</p>
+            </div>
+
+            <div class="technologies-grid">
+                <div class="technology-card"><i class="fab fa-html5"></i><h3>HTML5</h3><span>Estrutura</span></div>
+                <div class="technology-card"><i class="fab fa-css3-alt"></i><h3>CSS3</h3><span>Estilização</span></div>
+                <div class="technology-card"><i class="fab fa-js"></i><h3>JavaScript</h3><span>Interatividade</span></div>
+                <div class="technology-card"><i class="fab fa-node-js"></i><h3>Node.js</h3><span>Back-end</span></div>
+                <div class="technology-card"><i class="fas fa-server"></i><h3>Express</h3><span>API REST</span></div>
+                <div class="technology-card"><i class="fas fa-database"></i><h3>MongoDB</h3><span>Banco de dados</span></div>
+                <div class="technology-card"><i class="fas fa-brain"></i><h3>Google Gemini</h3><span>Capiá IA</span></div>
+                <div class="technology-card"><i class="fab fa-github"></i><h3>GitHub</h3><span>Versionamento</span></div>
+            </div>
+        </section>
+
+        <!-- 07. EQUIPE -->
+        <section class="about-team">
+            <div class="about-section-heading">
+                <span>07 — EQUIPE</span>
+                <h2>Quem desenvolveu o projeto</h2>
+                <p>Estudantes e orientação acadêmica responsáveis pelo Paraná Living Score.</p>
+            </div>
+
             <div class="team-grid">
-                <!-- Membro 1 -->
-                <div class="team-card">
-                    <div class="member-photo">
-                        <i class="fas fa-user-circle"></i>
-                    </div>
-                    <h4>Arthur</h4>
-                    <p>Desenvolvedor Full Stack</p>
-                </div>
-                <!-- Membro 2 -->
-                <div class="team-card">
-                    <div class="member-photo">
-                        <i class="fas fa-user-circle"></i>
-                    </div>
-                    <h4>Isabela</h4>
-                    <p>Especialista em Dados/IA</p>
+                <article class="about-team-card">
+                    <div class="team-avatar"><i class="fas fa-user"></i></div>
+                    <h3>Arthur Theodoro</h3>
+                    <p>Desenvolvimento e pesquisa</p>
+                    <span>Estudante de Informática para Internet — IFPR</span>
+                </article>
+
+                <article class="about-team-card">
+                    <div class="team-avatar"><i class="fas fa-user"></i></div>
+                    <h3>Isabela Domingos</h3>
+                    <p>Desenvolvimento e pesquisa</p>
+                    <span>Estudante de Informática para Internet — IFPR</span>
+                </article>
+            </div>
+
+            <div class="advisor-card">
+                <i class="fas fa-chalkboard-teacher"></i>
+                <div>
+                    <span>ORIENTADOR DO PROJETO</span>
+                    <h3>Vagner Simões Santos</h3>
+                    <p>Instituto Federal do Paraná — Campus Assis Chateaubriand</p>
                 </div>
             </div>
         </section>
+
+        <!-- 08. CONTATO & REPORTE DE ERROS -->
+        <section class="about-contact">
+            <div class="about-section-heading">
+                <span>08 — CONTATO E SUPORTE</span>
+                <h2>Fale com a equipe do PLS</h2>
+                <p>Canal oficial para dúvidas, sugestões de melhoria e reporte de erros em dados municipais.</p>
+            </div>
+
+            <div class="contact-card">
+                <div class="contact-info">
+                    <div class="contact-icon-wrap"><i class="fas fa-envelope-open-text"></i></div>
+                    <div>
+                        <h3>E-mail Oficial do Projeto</h3>
+                        <p>Encontrou alguma informação incorreta de um município, falha na página ou quer enviar uma sugestão para o projeto?</p>
+                        <strong class="contact-email-text">paranalivingscore@gmail.com</strong>
+                    </div>
+                </div>
+
+                <div class="contact-actions">
+                    <a href="mailto:paranalivingscore@gmail.com?subject=Contato%20/%20Reporte%20de%20Erro%20-%20Paran%C3%A1%20Living%20Score" class="btn-main contact-btn">
+                        <i class="fas fa-paper-plane"></i> Enviar E-mail / Reportar Erro
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ENCERRAMENTO -->
+        <section class="about-closing">
+            <i class="fas fa-map-marked-alt"></i>
+            <h2>Onde morar no Paraná?</h2>
+            <p>Explore os municípios, confira os indicadores oficiais e tire suas dúvidas com a Capiá IA.</p>
+            <div class="about-closing-actions">
+                <a href="ranking.html" class="about-closing-button">
+                    Explorar Ranking <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="cidades.html" class="about-closing-button btn-closing-secondary">
+                    Ver Municípios <i class="fas fa-city"></i>
+                </a>
+            </div>
+        </section>
+
     </main>
 
     <footer>
-        <p>&copy; 2024 - Projeto Integrador IFPR Assis Chateaubriand</p>
+        <div class="container">
+            <p>&copy; 2026 - Paraná Living Score | IFPR Campus Assis Chateaubriand</p>
+            <div class="footer-links">
+                <a href="ranking.html">Ver Ranking Completo</a>
+                <a href="chat.html">Capiá IA</a>
+                <a href="sobre.html">Sobre</a>
+            </div>
+        </div>
     </footer>
+
     <script src="script.js"></script>
-    <!-- VLibras Oficial -->
+
+    <!-- VLibras -->
     <div vw class="enabled">
         <div vw-access-button class="active"></div>
         <div vw-plugin-wrapper>
@@ -241,6 +462,6 @@
     <script>
         new window.VLibras.Widget('https://vlibras.gov.br/app');
     </script>
-</body>
 
+</body>
 </html>

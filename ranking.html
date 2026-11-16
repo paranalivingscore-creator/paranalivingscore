@@ -13,14 +13,13 @@
 
     <!-- Header Principal com Menu Sanduíche -->
     <!-- Header Principal -->
+    <!-- Header Principal -->
     <header>
         <div class="container">
-            <!-- Logo à Esquerda -->
             <div class="logo">
                 <h1>Paraná Living <span>Score</span></h1>
             </div>
 
-            <!-- Navegação e Menu Sanduíche à Direita -->
             <div class="header-right-group">
                 <nav class="desktop-nav">
                     <ul>
@@ -41,7 +40,7 @@
                 </div>
             </div>
         </div>
-    </header>
+
 
     <!-- Fundo Escurecido (Backdrop) -->
     <div class="menu-drawer-backdrop" id="menuBackdrop" onclick="fecharMenuDrawer()"></div>
@@ -53,12 +52,8 @@
             <button class="btn-close-drawer" onclick="fecharMenuDrawer()"><i class="fas fa-times"></i></button>
         </div>
 
-        <!-- Área Dinâmica de Autenticação / Conta -->
-        <div id="drawerAuthContent">
-            <!-- O JavaScript injetará Login/Cadastro ou Minha Conta/Sair aqui -->
-        </div>
+        <div id="drawerAuthContent"></div>
 
-        <!-- Seção de Navegação Completa -->
         <div class="drawer-section">
             <h4>Navegação</h4>
             <ul class="drawer-links">
@@ -71,7 +66,6 @@
             </ul>
         </div>
 
-        <!-- Seção de Aparência / Dark Mode -->
         <div class="drawer-section">
             <h4>Aparência</h4>
             <div class="dark-mode-toggle-box">
@@ -83,7 +77,6 @@
             </div>
         </div>
 
-        <!-- Seção de Acessibilidade -->
         <div class="drawer-section">
             <h4>Acessibilidade</h4>
             <div style="display: flex; gap: 6px; margin-bottom: 8px;">
@@ -98,73 +91,11 @@
     </aside>
     </header>
 
-    <!-- Fundo Escurecido (Backdrop) -->
-    <div class="menu-drawer-backdrop" id="menuBackdrop" onclick="fecharMenuDrawer()"></div>
-
-    <!-- MENU SANDUÍCHE LATERAL (DRAWER) -->
-    <aside class="menu-drawer" id="menuDrawer">
-        <div class="menu-drawer-header">
-            <h3><i class="fas fa-bars"></i> Menu</h3>
-            <button class="btn-close-drawer" onclick="fecharMenuDrawer()"><i class="fas fa-times"></i></button>
-        </div>
-
-        <!-- Área Dinâmica de Autenticação / Conta -->
-        <div id="drawerAuthContent">
-            <!-- O JavaScript vai injetar Login/Cadastro ou Minha Conta/Sair aqui -->
-        </div>
-
-        <!-- Seção de Navegação Rápida -->
-        <div class="drawer-section">
-            <h4>Navegação</h4>
-            <ul class="drawer-links">
-                <li><a href="index.html"><i class="fas fa-home"></i> Início</a></li>
-                <li><a href="ranking.html"><i class="fas fa-trophy"></i> Ranking Oficial</a></li>
-                <li><a href="chat.html"><i class="fas fa-robot"></i> Consultor IA</a></li>
-                <li><a href="sobre.html"><i class="fas fa-info-circle"></i> Sobre o Projeto</a></li>
-            </ul>
-        </div>
-
-        <!-- Seção de Preferências / Modo Noturno -->
-        <div class="drawer-section">
-            <h4>Aparência</h4>
-            <div class="dark-mode-toggle-box">
-                <span id="dark-mode-label"><i class="fas fa-moon"></i> Modo Escuro</span>
-                <label class="switch">
-                    <input type="checkbox" id="darkModeSwitch" onchange="alternarModoNoturno()">
-                    <span class="slider"></span>
-                </label>
-            </div>
-        </div>
-
-        <!-- Seção de Acessibilidade -->
-        <div class="drawer-section">
-            <h4>Acessibilidade</h4>
-            <div style="display: flex; gap: 6px; margin-bottom: 8px;">
-                <button class="acc-action-btn" onclick="alterarFonte(10)"><i class="fas fa-font"></i> A+</button>
-                <button class="acc-action-btn" onclick="alterarFonte(-10)"><i class="fas fa-font"></i> A-</button>
-                <button class="acc-action-btn" onclick="resetarFonte()">Padrão</button>
-            </div>
-            <button class="acc-action-btn" onclick="alternarAltoContraste()">
-                <i class="fas fa-adjust"></i> Alto Contraste
-            </button>
-        </div>
-    </aside>
-    </header>
-
 
     <main class="container">
         <section class="ranking-header">
             <h2>Melhores Cidades do Paraná</h2>
             <p>Classificação baseada em indicadores reais do IPARDES e análise do Paraná Living Score.</p>
-
-            <!-- Filtros Rápidos -->
-            <div class="filters">
-                <span>Filtrar por:</span>
-                <button class="filter-btn active">Geral</button>
-                <button class="filter-btn">Educação</button>
-                <button class="filter-btn">Saúde</button>
-                <button class="filter-btn">Economia</button>
-            </div>
 
             <!-- BARRA DE BUSCA EM TEMPO REAL NO RANKING -->
             <div style="max-width: 500px; margin: 25px auto 0; position: relative;">
@@ -177,6 +108,7 @@
                 >
             </div>
 
+            <!-- Filtros Rápidos (Único bloco) -->
             <!-- Filtros Rápidos -->
             <div class="filters">
                 <span>Pilares:</span>
@@ -184,7 +116,7 @@
                 <button class="filter-btn">Educação</button>
                 <button class="filter-btn">Saúde</button>
                 <button class="filter-btn">Economia</button>
-                
+
                 <span style="margin-left: 10px;">Região:</span>
                 <select id="selectMesorregiao" onchange="aplicarFiltrosRanking()" style="padding: 8px 14px; border: 1px solid var(--border-color); border-radius: 20px; outline: none; background: white; font-weight: 600; color: var(--secondary-color); cursor: pointer;">
                     <option value="Todas">Todas as Regiões (399 Municípios)</option>
@@ -199,9 +131,13 @@
                     <option value="Sudeste Paranaense">⛰️ Sudeste Paranaense</option>
                     <option value="Centro Ocidental Paranaense">🌱 Centro Ocidental (Campo Mourão)</option>
                 </select>
+
+                <label style="display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; padding: 7px 14px; border: 1px solid var(--border-color); border-radius: 20px; background: white; font-size: 0.85rem; font-weight: 600; color: var(--secondary-color); cursor: pointer;">
+                    <input type="checkbox" id="chkIncluirIncompletas" onchange="aplicarFiltrosRanking()">
+                    Incluir cidades sem dados completos
+                </label>
             </div>
         </section>
-
         <section class="podium">
             <div class="podium-item second">
                 <div class="medal">2º</div>
@@ -229,8 +165,8 @@
                         <th>Posição</th>
                         <th>Cidade</th>
                         <th>Educação</th>
-                        <th>Segurança</th>
                         <th>Saúde</th>
+                        <th>Economia</th>
                         <th>Score Final</th>
                         <th>Ações</th>
                     </tr>
@@ -243,7 +179,14 @@
     </main>
 
     <footer>
-        <p>&copy; 2024 - Projeto Integrador IFPR Assis Chateaubriand</p>
+        <div class="container">
+            <p>&copy; 2024 - IFPR Assis Chateaubriand</p>
+            <div class="footer-links">
+                <a href="ranking.html">Ver Ranking Completo</a>
+                <a href="chat.html">Capiá IA</a>
+                <a href="sobre.html">Sobre</a>
+            </div>
+        </div>
     </footer>
     <script src="script.js"></script>
     <!-- VLibras Oficial -->

@@ -7,34 +7,51 @@ const API_URL = (window.location.hostname === 'localhost' || window.location.hos
 
 const FOTO_PADRAO_PARANA = "https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=1200&q=80";
 
-// Converte Markdown da IA para HTML estilizado (ChatGPT Style)
+function escaparHtml(texto) {
+    if (!texto) return '';
+    return texto
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 function formatarMarkdownVisual(texto) {
     if (!texto) return '';
-    let html = texto
-        .replace(/^### (.*$)/gim, '<h4 style="margin: 12px 0 6px; color: var(--secondary-color); font-weight: 800;">$1</h4>')
-        .replace(/^## (.*$)/gim, '<h3 style="margin: 14px 0 8px; color: var(--secondary-color); font-weight: 800;">$1</h3>')
-        .replace(/^# (.*$)/gim, '<h2 style="margin: 16px 0 10px; color: var(--secondary-color); font-weight: 800;">$1</h2>')
+    return texto
+        .replace(/^### (.*$)/gim, '<h4 style="margin: 12px 0 6px; font-weight: 800;">$1</h4>')
+        .replace(/^## (.*$)/gim, '<h3 style="margin: 14px 0 8px; font-weight: 800;">$1</h3>')
+        .replace(/^# (.*$)/gim, '<h2 style="margin: 16px 0 10px; font-weight: 800;">$1</h2>')
         .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/gim, '<em>$1</em>')
         .replace(/^\s*[-*]\s+(.*$)/gim, '<div style="margin: 4px 0; padding-left: 8px;">• $1</div>')
         .replace(/---/gim, '<hr style="border:0; border-top: 1px solid #e2e8f0; margin: 12px 0;">')
         .replace(/\n\n/gim, '<div style="height: 8px;"></div>')
         .replace(/\n/gim, '<br>');
-    return html;
 }
 
 function obterValorNum(campo) {
     if (campo === undefined || campo === null) return 0;
-    if (typeof campo === 'number') return campo;
-    if (typeof campo === 'object') {
-        if (campo['2023'] !== undefined) return Number(campo['2023']) || 0;
-        if (campo['2022'] !== undefined) return Number(campo['2022']) || 0;
-        if (campo.valor !== undefined) return Number(campo.valor) || 0;
+    if (typeof campo === 'number') return isNaN(campo) ? 0 : campo;
+    if (typeof campo === 'string') {
+        const n = Number(campo.replace(',', '.'));
+        return isNaN(n) ? 0 : n;
     }
-    return Number(campo) || 0;
+    if (typeof campo === 'object') {
+        if (campo['2023'] !== undefined) return obterValorNum(campo['2023']);
+        if (campo['2022'] !== undefined) return obterValorNum(campo['2022']);
+        if (campo.valor !== undefined) return obterValorNum(campo.valor);
+
+        const chaves = Object.keys(campo).sort().reverse();
+        for (const k of chaves) {
+            const num = obterValorNum(campo[k]);
+            if (num > 0) return num;
+        }
+    }
+    return 0;
 }
 
-// Busca foto com desambiguação
 async function obterUrlFotoCidade(nomeCidade) {
     const tentativas = [
         `${nomeCidade} (Paraná)`,
@@ -202,16 +219,21 @@ async function salvarPerfil(event) {
 
 function atualizarMenuNavegacao() {
     const navList = document.querySelector('nav.desktop-nav ul');
-    if (!navList) return;
+    if (navList) {
+        const paginaAtual = window.location.pathname.split('/').pop() || 'index.html';
+        const links = [
+            { href: 'index.html', label: 'Início' },
+            { href: 'ranking.html', label: 'Ranking' },
+            { href: 'cidades.html', label: 'Municípios' },
+            { href: 'comparar.html', label: 'Comparar' },
+            { href: 'chat.html', label: 'Chat IA' }
+        ];
 
-    navList.innerHTML = `
-        <li><a href="index.html">Início</a></li>
-        <li><a href="ranking.html">Ranking</a></li>
-        <li><a href="cidades.html">Municípios</a></li>
-        <li><a href="comparar.html">Comparar</a></li>
-        <li><a href="chat.html">Chat IA</a></li>
-    `;
-    
+        navList.innerHTML = links
+            .map(l => `<li><a href="${l.href}" class="${paginaAtual === l.href ? 'active' : ''}">${l.label}</a></li>`)
+            .join('');
+    }
+
     renderizarMenuDrawerAuth();
 }
 
@@ -314,10 +336,18 @@ async function carregarRankingCompleto() {
     }
 }
 
+function atualizarCardPodio(posicao, item) {
+    const elNome = document.getElementById(`pos${posicao}-nome`);
+    const elScore = document.getElementById(`pos${posicao}-score`);
+    if (elNome) elNome.innerText = item ? item.nome : '---';
+    if (elScore) elScore.innerText = (item && item.score_final !== null) ? item.score_final : '00.0';
+}
+
 function aplicarFiltrosRanking() {
     const btnAtivo = document.querySelector('.filter-btn.active');
     const pilar = btnAtivo ? btnAtivo.innerText.trim() : 'Geral';
     const regiao = document.getElementById('selectMesorregiao')?.value || 'Todas';
+    const incluirIncompletas = document.getElementById('chkIncluirIncompletas')?.checked || false;
 
     let lista = [...dadosRankingGlobal];
 
@@ -325,30 +355,37 @@ function aplicarFiltrosRanking() {
         lista = lista.filter(c => c.mesorregiao && c.mesorregiao.toLowerCase().includes(regiao.toLowerCase()));
     }
 
-    if (pilar === 'Educação') {
-        lista.sort((a, b) => obterValorNum(b.indicadores?.educacao) - obterValorNum(a.indicadores?.educacao));
-    } else if (pilar === 'Saúde') {
-        lista.sort((a, b) => obterValorNum(b.indicadores?.saude) - obterValorNum(a.indicadores?.saude));
-    } else if (pilar === 'Economia' || pilar === 'Emprego') {
-        lista.sort((a, b) => obterValorNum(b.indicadores?.economia) - obterValorNum(a.indicadores?.economia));
-    } else {
-        lista.sort((a, b) => b.score_final - a.score_final);
-    }
+    // Separa cidades com os 4 pilares completos das incompletas
+    const completas = lista.filter(c => c.dados_completos === true);
+    const incompletas = lista.filter(c => c.dados_completos !== true);
 
-    listaRankingFiltrada = lista.map((c, index) => ({ ...c, posicaoOficial: index + 1 }));
+    const ordenarPorPilar = (arr) => {
+        if (pilar === 'Educação') {
+            arr.sort((a, b) => obterValorNum(b.indicadores?.educacao) - obterValorNum(a.indicadores?.educacao));
+        } else if (pilar === 'Saúde') {
+            arr.sort((a, b) => obterValorNum(b.indicadores?.saude) - obterValorNum(a.indicadores?.saude));
+        } else if (pilar === 'Economia' || pilar === 'Emprego') {
+            arr.sort((a, b) => obterValorNum(b.indicadores?.economia) - obterValorNum(a.indicadores?.economia));
+        } else {
+            arr.sort((a, b) => (b.score_final || 0) - (a.score_final || 0));
+        }
+    };
 
-    if (listaRankingFiltrada.length >= 1) {
-        if (document.getElementById('pos1-nome')) document.getElementById('pos1-nome').innerText = listaRankingFiltrada[0].nome;
-        if (document.getElementById('pos1-score')) document.getElementById('pos1-score').innerText = listaRankingFiltrada[0].score_final;
-    }
-    if (listaRankingFiltrada.length >= 2) {
-        if (document.getElementById('pos2-nome')) document.getElementById('pos2-nome').innerText = listaRankingFiltrada[1].nome;
-        if (document.getElementById('pos2-score')) document.getElementById('pos2-score').innerText = listaRankingFiltrada[1].score_final;
-    }
-    if (listaRankingFiltrada.length >= 3) {
-        if (document.getElementById('pos3-nome')) document.getElementById('pos3-nome').innerText = listaRankingFiltrada[2].nome;
-        if (document.getElementById('pos3-score')) document.getElementById('pos3-score').innerText = listaRankingFiltrada[2].score_final;
-    }
+    ordenarPorPilar(completas);
+    incompletas.sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'pt-BR'));
+
+    // Numeração oficial (#1, #2, #3...) só vale para cidades com os 4 pilares completos
+    const completasNumeradas = completas.map((c, idx) => ({ ...c, posicaoOficial: idx + 1 }));
+    const incompletasSemPosicao = incompletas.map(c => ({ ...c, posicaoOficial: null }));
+
+    listaRankingFiltrada = incluirIncompletas
+        ? [...completasNumeradas, ...incompletasSemPosicao]
+        : completasNumeradas;
+
+    // Pódio sempre mostra apenas cidades com dados completos
+    atualizarCardPodio(1, completasNumeradas[0]);
+    atualizarCardPodio(2, completasNumeradas[1]);
+    atualizarCardPodio(3, completasNumeradas[2]);
 
     filtrarTabelaRanking();
 }
@@ -359,32 +396,49 @@ function filtrarTabelaRanking() {
 
     const termo = (document.getElementById('inputBuscaRanking')?.value || '').toLowerCase().trim();
 
-    const cidadesParaExibir = termo 
+    const cidadesParaExibir = termo
         ? listaRankingFiltrada.filter(c => c.nome.toLowerCase().includes(termo))
         : listaRankingFiltrada;
 
     tbody.innerHTML = '';
 
     if (cidadesParaExibir.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 25px; color: var(--text-muted);">Nenhum município encontrado.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 25px; color: var(--text-muted);">Nenhum município com os 4 pilares completos encontrado para este filtro.</td></tr>`;
         return;
     }
 
+    const formatarCelulaPilar = (val) => {
+        if (!val || val <= 0) return '<span style="color:#94a3b8; font-size:0.85rem;">Não informado</span>';
+        return val <= 1 ? (val * 10).toFixed(2) : val.toFixed(1);
+    };
+
     cidadesParaExibir.forEach(c => {
         const ind = c.indicadores || {};
-        const eduVal = obterValorNum(ind.educacao);
-        const sauVal = obterValorNum(ind.saude);
+        const eduVal = obterValorNum(ind.educacao) || obterValorNum(ind.ideb);
+        const sauVal = obterValorNum(ind.saude) || obterValorNum(ind.saude_leitos);
         const ecoVal = obterValorNum(ind.economia);
+        const nomeEncoded = encodeURIComponent(c.nome);
+
+        const posHtml = c.posicaoOficial
+            ? `<strong>#${c.posicaoOficial}</strong>`
+            : `<span style="color:#94a3b8;">—</span>`;
+
+        const scoreHtml = c.dados_completos && c.score_final !== null
+            ? `<span class="td-score">${c.score_final}</span>`
+            : `<span style="color:#94a3b8; font-size:0.82rem; font-weight:600;">Dados não informados</span>`;
 
         const tr = document.createElement('tr');
+        if (!c.dados_completos) {
+            tr.style.opacity = '0.78';
+        }
         tr.innerHTML = `
-            <td><strong>#${c.posicaoOficial}</strong></td>
-            <td><strong>${c.nome}</strong> <span style="font-size:0.75rem; color:#94a3b8;">(${c.mesorregiao || 'PR'})</span></td>
-            <td>${eduVal ? (eduVal <= 1 ? (eduVal * 10).toFixed(2) : eduVal.toFixed(1)) : '0.0'}</td>
-            <td>${sauVal ? (sauVal <= 1 ? (sauVal * 10).toFixed(2) : sauVal.toFixed(1)) : '0.0'}</td>
-            <td>${ecoVal ? (ecoVal <= 1 ? (ecoVal * 10).toFixed(2) : ecoVal.toFixed(1)) : '0.0'}</td>
-            <td class="td-score">${c.score_final}</td>
-            <td><button class="btn-view" onclick="verDetalhesCidade('${c.nome}')">Ver Análise</button></td>
+            <td>${posHtml}</td>
+            <td><strong>${escaparHtml(c.nome)}</strong> <span style="font-size:0.75rem; color:#94a3b8;">(${escaparHtml(c.mesorregiao || 'PR')})</span></td>
+            <td>${formatarCelulaPilar(eduVal)}</td>
+            <td>${formatarCelulaPilar(sauVal)}</td>
+            <td>${formatarCelulaPilar(ecoVal)}</td>
+            <td>${scoreHtml}</td>
+            <td><button class="btn-view" onclick="verDetalhesCidade(decodeURIComponent('${nomeEncoded}'))">Ver Análise</button></td>
         `;
         tbody.appendChild(tr);
     });
@@ -404,7 +458,6 @@ function configurarFiltrosRanking() {
         });
     });
 }
-
 // ==========================================
 // 5. CHAT IA COM HISTÓRICO & SIDEBAR
 // ==========================================
@@ -465,7 +518,7 @@ async function carregarListaHistoricoDrawer() {
 
                 itemDiv.innerHTML = `
                     <div class="chat-history-info">
-                        <div class="chat-history-title">${conv.titulo || 'Conversa sem título'}</div>
+                        <div class="chat-history-title">${escaparHtml(conv.titulo || 'Conversa sem título')}</div>
                         <div class="chat-history-date">${dataFormatada}</div>
                     </div>
                     <button class="btn-delete-history-item" onclick="excluirConversaEspecifica('${conv._id}', event)" title="Excluir conversa">
@@ -506,7 +559,9 @@ async function carregarConversaEspecifica(id) {
                          <span>Capiá:</span>
                        </div>`
                     : '';
-                const conteudo = msg.remetente === 'usuario' ? msg.conteudo : formatarMarkdownVisual(msg.conteudo);
+                const conteudo = msg.remetente === 'usuario'
+                    ? escaparHtml(msg.conteudo)
+                    : formatarMarkdownVisual(msg.conteudo);
                 chatWindow.innerHTML += `<div class="msg-bubble ${tipo}">${avatar}${conteudo}</div>`;
             });
             chatWindow.scrollTop = chatWindow.scrollHeight;
@@ -580,9 +635,16 @@ async function enviarMensagemChat(event) {
     const token = localStorage.getItem('token');
     const msg = input.value.trim();
 
-    if (!msg || !token) return;
+    if (!msg) return;
 
-    chatWindow.innerHTML += `<div class="msg-bubble msg-usuario">${msg}</div>`;
+    if (!token) {
+        if (confirm("Você precisa estar logado para conversar com a Capiá. Deseja fazer login agora?")) {
+            window.location.href = 'login.html';
+        }
+        return;
+    }
+
+    chatWindow.innerHTML += `<div class="msg-bubble msg-usuario">${escaparHtml(msg)}</div>`;
     input.value = "";
 
     const typingId = "typing-" + Date.now();
@@ -673,7 +735,7 @@ async function enviarPerguntaHero(event) {
         const data = await res.json();
 
         if (res.ok) {
-            corpoTexto.innerText = data.resposta;
+            corpoTexto.innerHTML = formatarMarkdownVisual(data.resposta);
         } else {
             corpoTexto.innerText = `❌ ${data.erro || 'Falha ao consultar a IA.'}`;
         }
@@ -761,10 +823,11 @@ function renderizarTabelaAdmin(lista) {
 
     lista.forEach(c => {
         const ind = c.indicadores || {};
+        const nomeEncoded = encodeURIComponent(c.nome || '');
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${c.ibge_id || '-'}</td>
-            <td><strong>${c.nome}</strong></td>
+            <td><strong>${escaparHtml(c.nome)}</strong></td>
             <td>${formatarNotaAdmin(ind.educacao)}</td>
             <td>${formatarNotaAdmin(ind.saude)}</td>
             <td>${formatarNotaAdmin(ind.economia)}</td>
@@ -772,7 +835,7 @@ function renderizarTabelaAdmin(lista) {
             <td class="td-score">${c.score_calculado || '0.0'}</td>
             <td>
                 <button class="btn-action-edit" onclick="prepararEdicaoCidade('${c._id}')" title="Editar"><i class="fas fa-edit"></i></button>
-                <button class="btn-action-delete" onclick="excluirCidade('${c._id}', '${c.nome}')" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+                <button class="btn-action-delete" onclick="excluirCidade('${c._id}', decodeURIComponent('${nomeEncoded}'))" title="Excluir"><i class="fas fa-trash-alt"></i></button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -786,7 +849,7 @@ function filtrarTabelaAdmin() {
         return;
     }
 
-    const filtradas = listaCidadesAdminGlobal.filter(c => 
+    const filtradas = listaCidadesAdminGlobal.filter(c =>
         (c.nome && c.nome.toLowerCase().includes(termo)) ||
         (c.ibge_id && String(c.ibge_id).includes(termo))
     );
@@ -937,243 +1000,858 @@ async function excluirCidade(id, nome) {
 // 8. MÓDULO DA PÁGINA MUNICÍPIOS (CIDADES.HTML)
 // ==========================================
 
-let listaCidadesAutocompletar = [];
-let cidadeAtualSelecionada = null;
-let instanciaGraficoEvolucao = null;
+let listaCidadesCompleta = [];
+let cidadeAtualDetalhes = null;
+let cidadeComparadaDados = null;
+let fotosGaleriaAtual = [];
+let indiceLightboxAtual = 0;
+let cidadesInicializado = false;
+
+const graficosCidades = {
+    radar: null,
+    barras: null,
+    distribuicao: null,
+    evolucao: null
+};
+
+function textoOuNaoInformado(valor) {
+    if (valor === undefined || valor === null) return 'Não informado';
+    const str = String(valor).trim();
+    if (!str || ['null', 'undefined', 'nan', 'n/d', '-'].includes(str.toLowerCase())) {
+        return 'Não informado';
+    }
+    return str;
+}
 
 async function inicializarPaginaCidades() {
+    if (cidadesInicializado) return;
+    cidadesInicializado = true;
+
     const datalist = document.getElementById('listaSugestoesCidades');
     if (!datalist) return;
 
     try {
         const res = await fetch(`${API_URL}/cidades`);
         const cidades = await res.json();
-        listaCidadesAutocompletar = cidades;
+        listaCidadesCompleta = Array.isArray(cidades) ? cidades : [];
 
-        datalist.innerHTML = '';
-        cidades.forEach(c => {
-            const option = document.createElement('option');
-            option.value = c.nome;
-            datalist.appendChild(option);
-        });
+        atualizarDatalistCidades(listaCidadesCompleta);
+        aplicarFiltrosExploracao();
 
         const params = new URLSearchParams(window.location.search);
         const nomeParam = params.get('nome') || params.get('busca');
+
         if (nomeParam) {
             document.getElementById('inputBuscaMunicipio').value = nomeParam;
             pesquisarMunicipioDetalhes(nomeParam);
-        } else if (cidades.length > 0) {
-            const padrao = cidades.find(c => c.nome.toLowerCase().includes("assis")) || cidades[0];
+        } else if (listaCidadesCompleta.length > 0) {
+            const padrao = listaCidadesCompleta.find(c => c.nome.toLowerCase().includes('assis chateaubriand'))
+                || listaCidadesCompleta[0];
             document.getElementById('inputBuscaMunicipio').value = padrao.nome;
-            pesquisarMunicipioDetalhes(padrao.nome);
+            pesquisarMunicipioDetalhes(padrao.nome, padrao.ibge_id);
         }
 
         document.getElementById('inputBuscaMunicipio')?.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') pesquisarMunicipioDetalhes();
         });
 
+        document.getElementById('inputCompararCom')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') aplicarComparacaoRapida();
+        });
+
     } catch (err) {
-        console.error("Erro ao carregar lista de cidades:", err);
+        console.error("Erro ao inicializar página de municípios:", err);
     }
 }
 
-async function carregarFotoCidade(nomeCidade) {
+function atualizarDatalistCidades(lista) {
+    const datalist = document.getElementById('listaSugestoesCidades');
+    if (!datalist) return;
+    datalist.innerHTML = '';
+    lista.forEach(c => {
+        const option = document.createElement('option');
+        option.value = c.nome;
+        datalist.appendChild(option);
+    });
+}
+
+function obterNotaPilarBruta(cidade, pilar) {
+    const ind = cidade?.indicadores || {};
+    if (pilar === 'score') return parseFloat(cidade.score_final) || 0;
+    const val = obterValorNum(ind[pilar]);
+    return val <= 1 && val > 0 ? val * 100 : val;
+}
+
+function aplicarFiltrosExploracao() {
+    const regiao = document.getElementById('filtroRegiaoCidades')?.value || 'Todas';
+    const ordenacao = document.getElementById('filtroOrdenacaoCidades')?.value || 'score';
+    const pillsContainer = document.getElementById('exploracaoTopPills');
+
+    let filtradas = [...listaCidadesCompleta];
+    if (regiao !== 'Todas') {
+        filtradas = filtradas.filter(c =>
+            c.mesorregiao && c.mesorregiao.toLowerCase().includes(regiao.toLowerCase())
+        );
+    }
+
+    atualizarDatalistCidades(filtradas);
+
+    // Quando ordenar pelo Living Score geral, considera apenas cidades com os 4 pilares completos
+    let candidatas = ordenacao === 'score'
+        ? filtradas.filter(c => c.dados_completos === true)
+        : filtradas.filter(c => obterNotaPilarBruta(c, ordenacao) > 0);
+
+    candidatas.sort((a, b) => obterNotaPilarBruta(b, ordenacao) - obterNotaPilarBruta(a, ordenacao));
+
+    if (!pillsContainer) return;
+
+    const top5 = candidatas.slice(0, 5);
+    const labelPilar = {
+        score: 'Destaques',
+        seguranca: 'Top Segurança',
+        educacao: 'Top Educação',
+        saude: 'Top Saúde',
+        economia: 'Top Economia'
+    }[ordenacao] || 'Destaques';
+
+    if (top5.length === 0) {
+        pillsContainer.innerHTML = `<span class="exp-pill-label">Nenhum município completo encontrado para este filtro.</span>`;
+        return;
+    }
+
+    pillsContainer.innerHTML = `<span class="exp-pill-label">${labelPilar}:</span>`;
+    top5.forEach((c, idx) => {
+        const nota = obterNotaPilarBruta(c, ordenacao).toFixed(1);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'exp-pill-btn';
+        btn.innerHTML = `<span>${idx + 1}º ${escaparHtml(c.nome)}</span> <span class="exp-pill-score">${nota}</span>`;
+        btn.onclick = () => {
+            document.getElementById('inputBuscaMunicipio').value = c.nome;
+            pesquisarMunicipioDetalhes(c.nome, c.ibge_id);
+        };
+        pillsContainer.appendChild(btn);
+    });
+}
+
+function calcularNotaLocalFallback(campo) {
+    const val = obterValorNum(campo);
+    if (!val || val <= 0) return null;
+    return val <= 1 ? Number((val * 100).toFixed(1)) : Number(Math.min(100, val).toFixed(1));
+}
+
+function extrairPilaresComFallback(data) {
+    const ind = data?.cidade?.indicadores || {};
+    const pc = data?.analise_estadual?.pilares_cidade || {};
+
+    const seg = pc.seguranca ?? calcularNotaLocalFallback(ind.seguranca ?? ind.seguranca_indice);
+    const edu = pc.educacao ?? calcularNotaLocalFallback(ind.educacao) ?? (obterValorNum(ind.ideb) > 0 ? Number((obterValorNum(ind.ideb) * 10).toFixed(1)) : null);
+    const sau = pc.saude ?? calcularNotaLocalFallback(ind.saude) ?? (obterValorNum(ind.saude_leitos) > 0 ? Number((obterValorNum(ind.saude_leitos) * 10).toFixed(1)) : null);
+    const pibVal = obterValorNum(ind.pib_per_capita);
+    const eco = pc.economia ?? calcularNotaLocalFallback(ind.economia) ?? (pibVal > 0 ? Number(Math.min(100, pibVal / 500).toFixed(1)) : null);
+
+    return { seguranca: seg, educacao: edu, saude: sau, economia: eco };
+}
+
+async function pesquisarMunicipioDetalhes(nomeFixo = null, ibgeIdPreferencial = null) {
+    const termoDigitado = (nomeFixo || document.getElementById('inputBuscaMunicipio')?.value || '').trim();
+    if (!termoDigitado && !ibgeIdPreferencial) return;
+
+    let identificadorConsulta = ibgeIdPreferencial;
+    if (!identificadorConsulta && termoDigitado) {
+        if (!isNaN(Number(termoDigitado))) {
+            identificadorConsulta = Number(termoDigitado);
+        } else {
+            const termoLower = termoDigitado.toLowerCase();
+            const matchExato = listaCidadesCompleta.find(c => c.nome && c.nome.toLowerCase() === termoLower);
+            if (matchExato?.ibge_id) {
+                identificadorConsulta = matchExato.ibge_id;
+            }
+        }
+    }
+    const termoConsulta = identificadorConsulta || termoDigitado;
+
+    const loader = document.getElementById('cidade-loader');
+    const erroBox = document.getElementById('cidade-erro');
+    const painel = document.getElementById('painelDetalhesCidade');
+
+    if (loader) loader.style.display = 'block';
+    if (erroBox) erroBox.style.display = 'none';
+    if (painel) painel.style.display = 'none';
+
+    cidadeComparadaDados = null;
+    const inputComp = document.getElementById('inputCompararCom');
+    if (inputComp) inputComp.value = '';
+
+    try {
+        const res = await fetch(`${API_URL}/cidades/detalhes/${encodeURIComponent(termoConsulta)}`);
+        if (!res.ok) {
+            if (erroBox) {
+                erroBox.innerText = `❌ Município "${termoDigitado || termoConsulta}" não encontrado na base de dados oficial.`;
+                erroBox.style.display = 'block';
+            }
+            return;
+        }
+
+        const data = await res.json();
+        console.log("📦 Detalhes recebidos da API:", data);
+        cidadeAtualDetalhes = data;
+
+        const inputBusca = document.getElementById('inputBuscaMunicipio');
+        if (inputBusca && data.cidade?.nome) {
+            inputBusca.value = data.cidade.nome;
+        }
+
+        await preencherHeroEFatos(data);
+        preencherPilaresEContexto(data);
+        preencherCartografia(data.cidade);
+
+        if (painel) painel.style.display = 'block';
+
+        renderizarTodosOsGraficos(data, null);
+
+        const fotoPrincipal = document.getElementById('detalhe-foto-banner')?.src || '';
+        carregarGaleriaMunicipio(data.cidade.nome, fotoPrincipal);
+
+    } catch (err) {
+        console.error("Erro ao carregar detalhes do município:", err);
+        if (erroBox) {
+            erroBox.innerText = "❌ Erro de conexão ao consultar os dados do município.";
+            erroBox.style.display = 'block';
+        }
+    } finally {
+        if (loader) loader.style.display = 'none';
+    }
+}
+
+async function preencherHeroEFatos(data) {
+    const c = data.cidade || {};
+    const ibge = data.ibge || {};
+    const demo = data.dados_complementares || ibge.demografia || {};
+    const stats = data.analise_estadual || {};
+    const wiki = data.contexto_wiki || {};
+
     const bannerImg = document.getElementById('detalhe-foto-banner');
-    const descTexto = document.getElementById('detalhe-descricao-texto');
-
-    if (bannerImg) bannerImg.src = FOTO_PADRAO_PARANA;
-    if (descTexto) descTexto.innerText = "Buscando dados enciclopédicos e perfil histórico do município...";
-
-    const tentativas = [
-        `${nomeCidade} (Paraná)`,
-        nomeCidade,
-        `Município de ${nomeCidade}`
-    ];
-
-    for (const termo of tentativas) {
-        try {
-            const url = `https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(termo)}`;
-            const res = await fetch(url);
-            if (!res.ok) continue;
-
-            const data = await res.json();
-            const fotoUrl = data.originalimage?.source || data.thumbnail?.source;
-            if (fotoUrl && bannerImg) {
-                bannerImg.src = fotoUrl;
-            }
-
-            if (data.extract && descTexto) {
-                descTexto.innerText = data.extract;
-                return;
-            }
-        } catch (err) { }
+    let fotoUrl = wiki.imagem_principal || await obterUrlFotoCidade(c.nome);
+    if (!fotoUrl) fotoUrl = FOTO_PADRAO_PARANA;
+    if (bannerImg) {
+        bannerImg.src = fotoUrl;
+        bannerImg.onerror = () => { bannerImg.src = FOTO_PADRAO_PARANA; };
     }
 
-    if (descTexto) {
-        descTexto.innerText = `${nomeCidade} é um município localizado no estado do Paraná, integrante da base oficial de indicadores do projeto Paraná Living Score.`;
+    document.getElementById('detalhe-nome').innerText = textoOuNaoInformado(c.nome);
+    document.getElementById('detalhe-ibge').innerText = c.ibge_id || 'Não informado';
+    document.getElementById('detalhe-meso').innerText = textoOuNaoInformado(ibge.geografia?.mesorregiao);
+    document.getElementById('detalhe-micro').innerText = textoOuNaoInformado(ibge.geografia?.microrregiao);
+
+    const completo = data.dados_completos ?? stats.dados_completos ?? (data.score_final !== null && data.score_final !== undefined);
+    const temScore = completo && data.score_final !== null && data.score_final !== undefined && !isNaN(parseFloat(data.score_final));
+
+    document.getElementById('detalhe-score').innerText = temScore ? data.score_final : 'S/D';
+
+    const badgeRank = document.getElementById('detalhe-ranking-badge');
+    if (badgeRank) {
+        if (!temScore || !stats.posicao_geral) {
+            badgeRank.innerHTML = `<i class="fas fa-info-circle"></i> Sem ranking (faltam pilares)`;
+        } else {
+            badgeRank.innerHTML = `<i class="fas fa-trophy"></i> ${stats.posicao_geral}º de ${stats.total_municipios} no PR`;
+        }
+    }
+
+    const diffEl = document.getElementById('detalhe-diff-media');
+    if (diffEl) {
+        if (temScore && typeof stats.medias_estaduais?.score === 'number') {
+            const diff = (parseFloat(data.score_final) - stats.medias_estaduais.score).toFixed(1);
+            const sinal = Number(diff) >= 0 ? '+' : '';
+            diffEl.innerText = `${sinal}${diff} vs média PR (${stats.medias_estaduais.score})`;
+            diffEl.className = `score-spotlight-diff ${Number(diff) >= 0 ? 'positivo' : 'negativo'}`;
+        } else if (!temScore) {
+            diffEl.innerText = 'Dados incompletos';
+            diffEl.className = 'score-spotlight-diff';
+        } else {
+            diffEl.innerText = 'Índice oficial PLS';
+            diffEl.className = 'score-spotlight-diff';
+        }
+    }
+
+    const climaEl = document.getElementById('detalhe-clima-valor');
+    if (climaEl) {
+        climaEl.innerText = data.clima
+            ? `${data.clima.temp}°C, ${data.clima.descricao} (Umidade: ${data.clima.umidade}%)`
+            : 'Não informado';
+    }
+
+    const popNum = Number(demo.populacao ?? demo.populacao_censo_2022);
+    document.getElementById('detalhe-populacao').innerText = (!isNaN(popNum) && popNum > 0)
+        ? `${popNum.toLocaleString('pt-BR')} hab.`
+        : 'Não informado';
+
+    const areaNum = Number(demo.area_km2);
+    document.getElementById('detalhe-area').innerText = (!isNaN(areaNum) && areaNum > 0)
+        ? `${areaNum.toLocaleString('pt-BR', { maximumFractionDigits: 3 })} km²`
+        : 'Não informado';
+
+    const densNum = Number(demo.densidade_hab_km2);
+    document.getElementById('detalhe-densidade').innerText = (!isNaN(densNum) && densNum > 0)
+        ? `${densNum.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} hab./km²`
+        : 'Não informado';
+
+    document.getElementById('detalhe-fundacao').innerText = textoOuNaoInformado(demo.fundacao);
+    document.getElementById('detalhe-gentilico').innerText = textoOuNaoInformado(demo.gentilico);
+
+    const pibNum = Number(demo.pib_per_capita);
+    document.getElementById('detalhe-pib-per-capita').innerText = (!isNaN(pibNum) && pibNum > 0)
+        ? pibNum.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+        : 'Não informado';
+
+    document.getElementById('detalhe-descricao-texto').innerText = textoOuNaoInformado(
+        wiki.resumo || c.descricao || c.sobre || c.info_curadoria
+    );
+}
+
+function preencherPilarCard(prefixo, nota100, rankInfo) {
+    const notaEl = document.getElementById(`pilar-${prefixo}-nota`);
+    const barraEl = document.getElementById(`pilar-${prefixo}-barra`);
+    const rankEl = document.getElementById(`pilar-${prefixo}-rank`);
+
+    const temNota = typeof nota100 === 'number' && !isNaN(nota100);
+
+    if (notaEl) notaEl.innerText = temNota ? `${nota100.toFixed(1)} pts` : 'Não informado';
+    if (barraEl) barraEl.style.width = temNota ? `${Math.min(100, Math.max(0, nota100))}%` : '0%';
+    if (rankEl) rankEl.innerText = rankInfo ? `#${rankInfo.posicao} / ${rankInfo.total}` : 'Ranking PR';
+}
+
+function formatarSaneamentoBanco(data) {
+    const sanObj = data?.dados_complementares?.saneamento_detalhado
+        || data?.cidade?.saneamento;
+
+    if (sanObj && typeof sanObj === 'object' && sanObj.esgoto) {
+        const esg = sanObj.esgoto;
+        const partes = [];
+        if (Number(esg.unidades_atendidas_total) > 0) {
+            partes.push(`${Number(esg.unidades_atendidas_total).toLocaleString('pt-BR')} unid. atendidas`);
+        }
+        if (Number(esg.unidades_atendidas_residencial) > 0) {
+            partes.push(`${Number(esg.unidades_atendidas_residencial).toLocaleString('pt-BR')} residenciais`);
+        }
+        if (Number(esg.ligacoes_total) > 0) {
+            partes.push(`${Number(esg.ligacoes_total).toLocaleString('pt-BR')} ligações de esgoto`);
+        }
+        if (partes.length > 0) {
+            return esg.ano ? `${partes.join(' • ')} (${esg.ano})` : partes.join(' • ');
+        }
+    }
+
+    const ind = data?.cidade?.indicadores || {};
+    return extrairUltimoAnoTexto(ind.saneamento ?? ind.saneamento_basico);
+}
+
+function preencherPilaresEContexto(data) {
+    const ind = data.cidade?.indicadores || {};
+    const stats = data.analise_estadual || {};
+    const rp = stats.ranking_pilares || {};
+    const pilares = extrairPilaresComFallback(data);
+
+    preencherPilarCard('seg', pilares.seguranca, rp.seguranca);
+    preencherPilarCard('edu', pilares.educacao, rp.educacao);
+    preencherPilarCard('sau', pilares.saude, rp.saude);
+    preencherPilarCard('eco', pilares.economia, rp.economia);
+
+    const geo = data.ibge?.geografia || {};
+    document.getElementById('card-ibge-imediata').innerText = textoOuNaoInformado(geo.regiao_imediata);
+    document.getElementById('card-ibge-intermediaria').innerText = textoOuNaoInformado(geo.regiao_intermediaria);
+    document.getElementById('card-ibge-regiao-completa').innerText =
+        (geo.mesorregiao && geo.mesorregiao !== 'Não informado') || (geo.microrregiao && geo.microrregiao !== 'Não informado')
+            ? `${textoOuNaoInformado(geo.mesorregiao)} / ${textoOuNaoInformado(geo.microrregiao)}`
+            : 'Não informado';
+
+    document.getElementById('ind-saneamento').innerText = formatarSaneamentoBanco(data);
+    document.getElementById('ind-agropecuaria').innerText = extrairUltimoAnoTexto(ind.agropecuaria);
+
+    const lider = stats.lider_estadual;
+    document.getElementById('detalhe-lider-estado').innerText = (lider && typeof lider.score === 'number')
+        ? `${lider.nome} (${lider.score.toFixed(1)} pts)`
+        : 'Não informado';
+}
+
+function extrairUltimoAnoTexto(campo) {
+    if (campo === undefined || campo === null) return 'Não informado';
+    if (typeof campo === 'number' && campo > 0) return campo.toFixed(4);
+    if (typeof campo === 'object') {
+        if (campo['2023'] > 0) return `${Number(campo['2023']).toFixed(4)} (2023)`;
+        if (campo['2022'] > 0) return `${Number(campo['2022']).toFixed(4)} (2022)`;
+    }
+    return 'Não informado';
+}
+
+async function carregarGaleriaMunicipio(nomeCidade, fotoPrincipalUrl) {
+    const loader = document.getElementById('galeriaLoader');
+    const vazia = document.getElementById('galeriaVazia');
+    const grid = document.getElementById('galeriaGrid');
+    const spanNome = document.getElementById('galeria-nome-cidade');
+
+    if (spanNome) spanNome.innerText = nomeCidade;
+    if (grid) grid.innerHTML = '';
+    if (vazia) vazia.style.display = 'none';
+    if (loader) loader.style.display = 'block';
+
+    fotosGaleriaAtual = [];
+
+    try {
+        const res = await fetch(
+            `${API_URL}/cidades/galeria/${encodeURIComponent(nomeCidade)}?principal=${encodeURIComponent(fotoPrincipalUrl)}`
+        );
+
+        if (!res.ok) {
+            if (vazia) vazia.style.display = 'block';
+            return;
+        }
+
+        const data = await res.json();
+        const fotos = Array.isArray(data.fotos) ? data.fotos : [];
+
+        fotosGaleriaAtual = fotos;
+
+        if (fotos.length === 0) {
+            if (vazia) vazia.style.display = 'block';
+            return;
+        }
+
+        fotos.forEach((foto, index) => {
+            const card = document.createElement('div');
+            card.className = 'galeria-card';
+            card.onclick = () => abrirLightbox(index);
+
+            card.innerHTML = `
+                <img src="${foto.url}" alt="${escaparHtml(foto.titulo)}" loading="lazy">
+                <div class="galeria-zoom-badge"><i class="fas fa-expand-alt"></i></div>
+                <div class="galeria-overlay">
+                    <div class="galeria-overlay-title">${escaparHtml(foto.titulo)}</div>
+                    <div class="galeria-overlay-credit">📷 ${escaparHtml(foto.credito)} • ${escaparHtml(foto.licenca)}</div>
+                </div>
+            `;
+
+            const imgEl = card.querySelector('img');
+            imgEl.onerror = () => {
+                card.remove();
+                if (grid.children.length === 0 && vazia) {
+                    vazia.style.display = 'block';
+                }
+            };
+
+            grid.appendChild(card);
+        });
+    } catch (err) {
+        if (vazia) vazia.style.display = 'block';
+    } finally {
+        if (loader) loader.style.display = 'none';
     }
 }
 
-function renderizarGraficoEvolucao(ind) {
-    const canvas = document.getElementById('graficoEvolucaoCidade');
+function abrirLightbox(index) {
+    if (!fotosGaleriaAtual[index]) return;
+    indiceLightboxAtual = index;
+    atualizarConteudoLightbox();
+    document.getElementById('modalLightbox')?.classList.add('open');
+}
+
+function atualizarConteudoLightbox() {
+    const foto = fotosGaleriaAtual[indiceLightboxAtual];
+    if (!foto) return;
+
+    document.getElementById('lightboxImg').src = foto.fullUrl || foto.url;
+    document.getElementById('lightboxTitulo').innerText = foto.titulo;
+    document.getElementById('lightboxLegenda').innerText = foto.legenda;
+    document.getElementById('lightboxCredito').innerText = `Crédito: ${foto.credito} (${foto.licenca})`;
+    document.getElementById('lightboxContador').innerText = `${indiceLightboxAtual + 1} de ${fotosGaleriaAtual.length}`;
+}
+
+function fecharLightbox(event, forcar = false) {
+    if (forcar || event?.target?.id === 'modalLightbox') {
+        document.getElementById('modalLightbox')?.classList.remove('open');
+    }
+}
+
+function navegarLightbox(delta, event) {
+    if (event) event.stopPropagation();
+    if (fotosGaleriaAtual.length === 0) return;
+    indiceLightboxAtual = (indiceLightboxAtual + delta + fotosGaleriaAtual.length) % fotosGaleriaAtual.length;
+    atualizarConteudoLightbox();
+}
+
+document.addEventListener('keydown', (e) => {
+    const modal = document.getElementById('modalLightbox');
+    if (!modal || !modal.classList.contains('open')) return;
+    if (e.key === 'Escape') fecharLightbox(null, true);
+    if (e.key === 'ArrowRight') navegarLightbox(1);
+    if (e.key === 'ArrowLeft') navegarLightbox(-1);
+});
+
+async function aplicarComparacaoRapida() {
+    const nomeComp = document.getElementById('inputCompararCom')?.value.trim();
+    if (!nomeComp || !cidadeAtualDetalhes) return;
+
+    const matchExato = listaCidadesCompleta.find(c => c.nome && c.nome.toLowerCase() === nomeComp.toLowerCase());
+    const termoConsulta = matchExato?.ibge_id || nomeComp;
+
+    try {
+        const res = await fetch(`${API_URL}/cidades/detalhes/${encodeURIComponent(termoConsulta)}`);
+        if (!res.ok) {
+            alert(`Município "${nomeComp}" não encontrado para comparação.`);
+            return;
+        }
+        cidadeComparadaDados = await res.json();
+        renderizarTodosOsGraficos(cidadeAtualDetalhes, cidadeComparadaDados);
+    } catch {
+        alert("Erro ao buscar município para comparação.");
+    }
+}
+
+function destruirGrafico(chave) {
+    if (graficosCidades[chave]) {
+        graficosCidades[chave].destroy();
+        graficosCidades[chave] = null;
+    }
+}
+
+function renderizarTodosOsGraficos(data, compData) {
+    if (typeof Chart === 'undefined') {
+        console.error("❌ Chart.js não foi carregado no HTML!");
+        return;
+    }
+
+    const ehDark = document.body.classList.contains('dark-mode');
+    const corTexto = ehDark ? '#cbd5e1' : '#334155';
+    const corGrid = ehDark ? 'rgba(148, 163, 184, 0.16)' : 'rgba(15, 23, 42, 0.08)';
+
+    renderizarRadar(data, compData, corTexto, corGrid);
+    renderizarBarrasEstado(data, compData, corTexto, corGrid);
+    renderizarDistribuicao(data, corTexto, corGrid);
+    renderizarEvolucaoValida(data, corTexto, corGrid);
+}
+
+function renderizarRadar(data, compData, corTexto, corGrid) {
+    destruirGrafico('radar');
+    const canvas = document.getElementById('graficoRadarPilares');
     if (!canvas) return;
 
-    if (instanciaGraficoEvolucao) {
-        instanciaGraficoEvolucao.destroy();
+    const pc = extrairPilaresComFallback(data);
+    const me = data.analise_estadual?.medias_estaduais || {};
+
+    const datasets = [
+        {
+            label: data.cidade.nome,
+            data: [pc.seguranca || 0, pc.educacao || 0, pc.saude || 0, pc.economia || 0],
+            backgroundColor: 'rgba(37, 99, 235, 0.22)',
+            borderColor: '#2563eb',
+            pointBackgroundColor: '#2563eb',
+            borderWidth: 2
+        }
+    ];
+
+    if (me.seguranca || me.educacao || me.saude || me.economia) {
+        datasets.push({
+            label: 'Média do Paraná',
+            data: [me.seguranca || 0, me.educacao || 0, me.saude || 0, me.economia || 0],
+            backgroundColor: 'rgba(148, 163, 184, 0.15)',
+            borderColor: '#94a3b8',
+            borderDash: [5, 5],
+            pointBackgroundColor: '#94a3b8',
+            borderWidth: 2
+        });
     }
 
-    const ctx = canvas.getContext('2d');
+    if (compData) {
+        const pComp = extrairPilaresComFallback(compData);
+        datasets.push({
+            label: compData.cidade.nome,
+            data: [pComp.seguranca || 0, pComp.educacao || 0, pComp.saude || 0, pComp.economia || 0],
+            backgroundColor: 'rgba(16, 185, 129, 0.2)',
+            borderColor: '#10b981',
+            pointBackgroundColor: '#10b981',
+            borderWidth: 2
+        });
+    }
 
-    const edu22 = (Number(ind.educacao?.['2022']) || 0) * 100;
-    const edu23 = (Number(ind.educacao?.['2023']) || 0) * 100;
-
-    const sau22 = (Number(ind.saude?.['2022']) || 0) * 100;
-    const sau23 = (Number(ind.saude?.['2023']) || 0) * 100;
-
-    const eco22 = (Number(ind.economia?.['2022']) || 0) * 100;
-    const eco23 = (Number(ind.economia?.['2023']) || 0) * 100;
-
-    instanciaGraficoEvolucao = new Chart(ctx, {
-        type: 'bar',
+    graficosCidades.radar = new Chart(canvas.getContext('2d'), {
+        type: 'radar',
         data: {
-            labels: ['🎓 Educação', '🏥 Saúde', '💼 Economia e Renda'],
-            datasets: [
-                {
-                    label: 'Ano 2022 (IPARDES)',
-                    data: [edu22.toFixed(1), sau22.toFixed(1), eco22.toFixed(1)],
-                    backgroundColor: 'rgba(148, 163, 184, 0.7)',
-                    borderColor: '#94a3b8',
-                    borderWidth: 1
-                },
-                {
-                    label: 'Ano 2023 (IPARDES)',
-                    data: [edu23.toFixed(1), sau23.toFixed(1), eco23.toFixed(1)],
-                    backgroundColor: 'rgba(37, 99, 235, 0.85)',
-                    borderColor: '#2563eb',
-                    borderWidth: 1
-                }
-            ]
+            labels: ['Segurança', 'Educação', 'Saúde', 'Economia'],
+            datasets
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: corTexto } }
+            },
             scales: {
-                y: {
+                r: {
                     beginAtZero: true,
                     max: 100,
-                    title: { display: true, text: 'Pontuação (0 a 100)' }
+                    ticks: { color: corTexto, backdropColor: 'transparent' },
+                    grid: { color: corGrid },
+                    pointLabels: { color: corTexto, font: { weight: 'bold', size: 12 } }
                 }
             }
         }
     });
 }
 
-async function pesquisarMunicipioDetalhes(nomeFixo = null) {
-    const termo = (nomeFixo || document.getElementById('inputBuscaMunicipio')?.value || '').trim();
-    if (!termo) return;
+function renderizarBarrasEstado(data, compData, corTexto, corGrid) {
+    destruirGrafico('barras');
+    const canvas = document.getElementById('graficoBarrasEstado');
+    if (!canvas) return;
 
-    const loader = document.getElementById('cidade-loader');
-    const painel = document.getElementById('painelDetalhesCidade');
+    const pc = extrairPilaresComFallback(data);
+    const me = data.analise_estadual?.medias_estaduais || {};
 
-    if (loader) loader.style.display = 'block';
-    if (painel) painel.style.display = 'none';
-
-    try {
-        const res = await fetch(`${API_URL}/cidades/detalhes/${encodeURIComponent(termo)}`);
-        if (!res.ok) {
-            alert(`Município "${termo}" não encontrado.`);
-            return;
+    const datasets = [
+        {
+            label: `${data.cidade.nome}`,
+            data: [pc.seguranca || 0, pc.educacao || 0, pc.saude || 0, pc.economia || 0],
+            backgroundColor: 'rgba(37, 99, 235, 0.85)',
+            borderRadius: 6
         }
+    ];
 
-        const data = await res.json();
-        const c = data.cidade;
-        const ibge = data.ibge;
-        cidadeAtualSelecionada = c.nome;
+    if (me.seguranca || me.educacao || me.saude || me.economia) {
+        datasets.push({
+            label: 'Média Estadual (PR)',
+            data: [me.seguranca || 0, me.educacao || 0, me.saude || 0, me.economia || 0],
+            backgroundColor: 'rgba(148, 163, 184, 0.6)',
+            borderRadius: 6
+        });
+    }
 
-        carregarFotoCidade(c.nome);
+    if (compData) {
+        const pComp = extrairPilaresComFallback(compData);
+        datasets.push({
+            label: compData.cidade.nome,
+            data: [pComp.seguranca || 0, pComp.educacao || 0, pComp.saude || 0, pComp.economia || 0],
+            backgroundColor: 'rgba(16, 185, 129, 0.82)',
+            borderRadius: 6
+        });
+    }
 
-        document.getElementById('detalhe-nome').innerText = c.nome;
-        document.getElementById('detalhe-ibge').innerText = c.ibge_id || '-';
-        document.getElementById('detalhe-score').innerText = data.score_final || '0.0';
-        document.getElementById('detalhe-meso').innerText = ibge?.geografia?.mesorregiao || 'Paraná';
-        document.getElementById('detalhe-micro').innerText = ibge?.geografia?.microrregiao || 'Geral';
-
-        const climaTxt = document.getElementById('detalhe-clima-valor');
-        if (climaTxt) {
-            if (data.clima) {
-                climaTxt.innerText = `${data.clima.temp}°C, ${data.clima.descricao} (Umidade: ${data.clima.umidade}%)`;
-            } else {
-                climaTxt.innerText = 'Previsão momentaneamente indisponível';
+    graficosCidades.barras = new Chart(canvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['Segurança', 'Educação', 'Saúde', 'Economia'],
+            datasets
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: corTexto } },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.x} pts`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    max: 100,
+                    grid: { color: corGrid },
+                    ticks: { color: corTexto }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { color: corTexto, font: { weight: 'bold' } }
+                }
             }
         }
+    });
+}
 
-        const ind = c.indicadores || {};
+function renderizarDistribuicao(data, corTexto, corGrid) {
+    destruirGrafico('distribuicao');
+    const canvas = document.getElementById('graficoDistribuicaoPR');
+    if (!canvas) return;
 
-        const edu22 = ind.educacao?.['2022'] !== undefined ? Number(ind.educacao['2022']).toFixed(4) : '-';
-        const edu23 = ind.educacao?.['2023'] !== undefined ? Number(ind.educacao['2023']).toFixed(4) : '-';
-        document.getElementById('card-edu-2022').innerText = edu22;
-        document.getElementById('card-edu-2023').innerText = edu23;
-        document.getElementById('card-edu-atual').innerText = edu23 !== '-' ? edu23 : edu22;
+    const dist = data.analise_estadual?.distribuicao;
+    if (!dist) return;
 
-        const sau22 = ind.saude?.['2022'] !== undefined ? Number(ind.saude['2022']).toFixed(4) : '-';
-        const sau23 = ind.saude?.['2023'] !== undefined ? Number(ind.saude['2023']).toFixed(4) : '-';
-        document.getElementById('card-sau-2022').innerText = sau22;
-        document.getElementById('card-sau-2023').innerText = sau23;
-        document.getElementById('card-sau-atual').innerText = sau23 !== '-' ? sau23 : sau22;
+    const cores = dist.labels.map((_, i) =>
+        i === dist.faixa_atual_idx ? '#10b981' : 'rgba(37, 99, 235, 0.5)'
+    );
 
-        const eco22 = ind.economia?.['2022'] !== undefined ? Number(ind.economia['2022']).toFixed(4) : '-';
-        const eco23 = ind.economia?.['2023'] !== undefined ? Number(ind.economia['2023']).toFixed(4) : '-';
-        document.getElementById('card-eco-2022').innerText = eco22;
-        document.getElementById('card-eco-2023').innerText = eco23;
-        document.getElementById('card-eco-atual').innerText = eco23 !== '-' ? eco23 : eco22;
+    const subtitulo = document.getElementById('distribuicaoSubtitulo');
+    if (subtitulo && dist.faixa_atual_idx >= 0) {
+        subtitulo.innerText = `${data.cidade.nome} está na faixa ${dist.labels[dist.faixa_atual_idx]} pts (em verde)`;
+    }
 
-        document.getElementById('card-ibge-imediata').innerText = ibge?.geografia?.regiao_imediata || 'Não informada';
-        document.getElementById('card-ibge-intermediaria').innerText = ibge?.geografia?.regiao_intermediaria || 'Não informada';
-        document.getElementById('card-ibge-regiao-completa').innerText = `${ibge?.geografia?.mesorregiao || 'PR'} / ${ibge?.geografia?.microrregiao || 'PR'}`;
-
-        const popFormatada = (ibge?.demografia?.populacao_censo_2022 && ibge.demografia.populacao_censo_2022 > 0)
-            ? Number(ibge.demografia.populacao_censo_2022).toLocaleString('pt-BR') + ' hab.'
-            : 'Em catalogação';
-            
-        const areaFormatada = (ibge?.demografia?.area_km2 && ibge.demografia.area_km2 > 0)
-            ? Number(ibge.demografia.area_km2).toLocaleString('pt-BR') + ' km²'
-            : 'Paraná';
-
-        if (document.getElementById('detalhe-populacao')) document.getElementById('detalhe-populacao').innerText = popFormatada;
-        if (document.getElementById('detalhe-area')) document.getElementById('detalhe-area').innerText = areaFormatada;
-        if (document.getElementById('detalhe-gentilico')) document.getElementById('detalhe-gentilico').innerText = `${c.nome.toLowerCase()}ense`;
-        if (document.getElementById('detalhe-prefeitura')) document.getElementById('detalhe-prefeitura').innerText = `Prefeitura de ${c.nome}`;
-
-        const mapaIframe = document.getElementById('mapaCidadeIframe');
-        if (mapaIframe) {
-            mapaIframe.src = `https://maps.google.com/maps?q=${encodeURIComponent(c.nome + ', PR, Brasil')}&t=&z=12&ie=UTF8&iwloc=&output=embed`;
+    graficosCidades.distribuicao = new Chart(canvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: dist.labels.map(l => `${l} pts`),
+            datasets: [{
+                label: 'Quantidade de municípios',
+                data: dist.valores,
+                backgroundColor: cores,
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => `${ctx.parsed.y} municípios nesta faixa`
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: corGrid },
+                    ticks: { color: corTexto, precision: 0 }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: corTexto }
+                }
+            }
         }
+    });
+}
 
-        renderizarGraficoEvolucao(ind);
+function renderizarEvolucaoValida(data, corTexto, corGrid) {
+    destruirGrafico('evolucao');
+    const canvas = document.getElementById('graficoEvolucaoCidade');
+    const wrap = document.getElementById('wrapGraficoEvolucao');
+    const aviso = document.getElementById('avisoSemEvolucao');
+    if (!canvas) return;
 
-        if (painel) painel.style.display = 'block';
+    const ind = data.cidade.indicadores || {};
+    const candidatos = [
+        { nome: 'Segurança', obj: ind.seguranca },
+        { nome: 'Educação', obj: ind.educacao },
+        { nome: 'Saúde', obj: ind.saude },
+        { nome: 'Economia', obj: ind.economia }
+    ];
 
-    } catch (err) {
-        console.error("Erro na busca de detalhes:", err);
-        alert("Erro ao buscar informações do município.");
-    } finally {
-        if (loader) loader.style.display = 'none';
+    const validos = candidatos.filter(item =>
+        item.obj &&
+        typeof item.obj === 'object' &&
+        Number(item.obj['2022']) > 0 &&
+        Number(item.obj['2023']) > 0
+    );
+
+    if (validos.length === 0) {
+        if (wrap) wrap.style.display = 'none';
+        if (aviso) aviso.style.display = 'block';
+        return;
+    }
+
+    if (wrap) wrap.style.display = 'block';
+    if (aviso) aviso.style.display = 'none';
+
+    const normalizar = (v) => (Number(v) <= 1 ? Number(v) * 100 : Number(v)).toFixed(1);
+
+    graficosCidades.evolucao = new Chart(canvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: validos.map(v => v.nome),
+            datasets: [
+                {
+                    label: '2022',
+                    data: validos.map(v => normalizar(v.obj['2022'])),
+                    backgroundColor: 'rgba(148, 163, 184, 0.72)',
+                    borderRadius: 6
+                },
+                {
+                    label: '2023',
+                    data: validos.map(v => normalizar(v.obj['2023'])),
+                    backgroundColor: 'rgba(37, 99, 235, 0.88)',
+                    borderRadius: 6
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: corTexto } },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y} pts`
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    grid: { color: corGrid },
+                    ticks: { color: corTexto }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: corTexto }
+                }
+            }
+        }
+    });
+}
+
+function preencherCartografia(cidade) {
+    const mapaIframe = document.getElementById('mapaCidadeIframe');
+    if (mapaIframe) {
+        mapaIframe.src = `https://maps.google.com/maps?q=${encodeURIComponent(cidade.nome + ', PR, Brasil')}&t=&z=12&ie=UTF8&iwloc=&output=embed`;
+    }
+
+    const imgMalha = document.getElementById('imgMalhaIbge');
+    const erroMsg = document.getElementById('malhaErroMsg');
+    if (imgMalha && cidade.ibge_id) {
+        imgMalha.style.display = 'block';
+        if (erroMsg) erroMsg.style.display = 'none';
+        imgMalha.src = `https://servicodados.ibge.gov.br/api/v3/malhas/municipios/${cidade.ibge_id}?formato=image/svg+xml`;
+    }
+}
+
+function alternarAbaMapa(aba) {
+    const painelMapa = document.getElementById('painelMapaInterativo');
+    const painelMalha = document.getElementById('painelMalhaIbge');
+    const btnMapa = document.getElementById('tabBtnMapa');
+    const btnMalha = document.getElementById('tabBtnMalha');
+
+    if (aba === 'malha') {
+        if (painelMapa) painelMapa.style.display = 'none';
+        if (painelMalha) painelMalha.style.display = 'block';
+        btnMapa?.classList.remove('active');
+        btnMalha?.classList.add('active');
+    } else {
+        if (painelMapa) painelMapa.style.display = 'block';
+        if (painelMalha) painelMalha.style.display = 'none';
+        btnMapa?.classList.add('active');
+        btnMalha?.classList.remove('active');
     }
 }
 
 function perguntarSobreEstaCidade() {
-    if (!cidadeAtualSelecionada) return;
-    window.location.href = `chat.html?pergunta=${encodeURIComponent(`Faça uma análise detalhada sobre a qualidade de vida e os indicadores de ${cidadeAtualSelecionada}`)}`;
+    if (!cidadeAtualDetalhes?.cidade?.nome) return;
+    const nome = cidadeAtualDetalhes.cidade.nome;
+    window.location.href = `chat.html?pergunta=${encodeURIComponent(`Faça uma análise detalhada sobre a qualidade de vida e os indicadores de ${nome}`)}`;
 }
-
 // ==========================================
 // 9. MÓDULO DO COMPARADOR (COMPARAR.HTML)
 // ==========================================
 
 let dadosComparador = { c1: null, c2: null };
 let instanciaRadarComparador = null;
+let comparadorInicializado = false;
 
 async function inicializarComparador() {
+    if (comparadorInicializado) return;
+    comparadorInicializado = true;
+
     const datalist = document.getElementById('listaSugestoesCidades');
     if (!datalist) return;
 
@@ -1281,6 +1959,9 @@ function montarTabelaComparativa(d1, d2) {
     const score1 = Number(d1.score_final);
     const score2 = Number(d2.score_final);
 
+    const pop1 = d1.dados_complementares?.populacao ?? d1.ibge?.demografia?.populacao_censo_2022;
+    const pop2 = d2.dados_complementares?.populacao ?? d2.ibge?.demografia?.populacao_censo_2022;
+
     const linhas = [
         {
             nome: 'Living Score Geral',
@@ -1307,15 +1988,15 @@ function montarTabelaComparativa(d1, d2) {
             vencedor: eco1 > eco2 ? d1.cidade.nome : (eco2 > eco1 ? d2.cidade.nome : 'Empate')
         },
         {
-            nome: '👥 População (Censo)',
-            v1: d1.ibge?.demografia?.populacao_censo_2022 ? Number(d1.ibge.demografia.populacao_censo_2022).toLocaleString('pt-BR') + ' hab.' : 'Em catalogação',
-            v2: d2.ibge?.demografia?.populacao_censo_2022 ? Number(d2.ibge.demografia.populacao_censo_2022).toLocaleString('pt-BR') + ' hab.' : 'Em catalogação',
+            nome: '👥 População',
+            v1: (pop1 && Number(pop1) > 0) ? Number(pop1).toLocaleString('pt-BR') + ' hab.' : 'Não informado',
+            v2: (pop2 && Number(pop2) > 0) ? Number(pop2).toLocaleString('pt-BR') + ' hab.' : 'Não informado',
             vencedor: '-'
         },
         {
             nome: '🗺️ Região Geográfica',
-            v1: d1.ibge?.geografia?.mesorregiao || 'PR',
-            v2: d2.ibge?.geografia?.mesorregiao || 'PR',
+            v1: d1.ibge?.geografia?.mesorregiao || 'Não informado',
+            v2: d2.ibge?.geografia?.mesorregiao || 'Não informado',
             vencedor: '-'
         }
     ];
@@ -1323,8 +2004,8 @@ function montarTabelaComparativa(d1, d2) {
     tbody.innerHTML = '';
     linhas.forEach(l => {
         const tr = document.createElement('tr');
-        const badgeVencedor = l.vencedor !== '-' 
-            ? `<span style="background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.8rem;">🏆 ${l.vencedor}</span>`
+        const badgeVencedor = l.vencedor !== '-'
+            ? `<span style="background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.8rem;">🏆 ${escaparHtml(l.vencedor)}</span>`
             : '<span style="color:#94a3b8;">Informativo</span>';
 
         tr.innerHTML = `
@@ -1424,7 +2105,7 @@ async function pedirVereditoIA() {
 
         const data = await res.json();
         if (res.ok) {
-            textoVeredito.innerText = data.resposta;
+            textoVeredito.innerHTML = formatarMarkdownVisual(data.resposta);
         } else {
             textoVeredito.innerText = `❌ ${data.erro || 'Falha ao gerar análise de IA.'}`;
         }
@@ -1461,7 +2142,7 @@ function renderizarMenuDrawerAuth() {
             <div class="drawer-user-card">
                 <i class="fas fa-user-circle"></i>
                 <div>
-                    <strong style="display:block; font-size: 0.95rem;">${usuarioNome}</strong>
+                    <strong style="display:block; font-size: 0.95rem;">${escaparHtml(usuarioNome)}</strong>
                     <span style="font-size: 0.78rem; color: var(--text-muted);">${usuarioRole === 'admin' ? '🛡️ Administrador' : 'Cidadão'}</span>
                 </div>
             </div>
@@ -1583,8 +2264,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const formChat = document.getElementById('chatForm');
     if (formChat) {
         formChat.onsubmit = enviarMensagemChat;
-        if (typeof carregarHistoricoChat === 'function') {
-            carregarHistoricoChat();
+
+        const params = new URLSearchParams(window.location.search);
+        const perguntaUrl = params.get('pergunta');
+        if (perguntaUrl) {
+            const inputChat = document.getElementById('msg-input');
+            if (inputChat) {
+                inputChat.value = perguntaUrl;
+                if (localStorage.getItem('token')) {
+                    enviarMensagemChat();
+                }
+            }
         }
     }
 

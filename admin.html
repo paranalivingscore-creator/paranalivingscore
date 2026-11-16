@@ -10,24 +10,15 @@
 </head>
 
 <body>
-<!-- Barra de Acessibilidade -->
-<div class="accessibility-bar">
-    <div class="container">
-        <button class="acc-btn" onclick="alterarFonte(10)" title="Aumentar texto"><i class="fas fa-font"></i> A+</button>
-        <button class="acc-btn" onclick="alterarFonte(-10)" title="Diminuir texto"><i class="fas fa-font"></i> A-</button>
-        <button class="acc-btn" onclick="resetarFonte()" title="Tamanho normal">A (Padrão)</button>
-        <button class="acc-btn" onclick="alternarAltoContraste()" title="Alternar Alto Contraste"><i class="fas fa-adjust"></i> Alto Contraste</button>
-    </div>
-</div>
+
    <!-- Header Principal -->
+    <!-- Header Principal -->
     <header>
         <div class="container">
-            <!-- Logo à Esquerda -->
             <div class="logo">
                 <h1>Paraná Living <span>Score</span></h1>
             </div>
 
-            <!-- Navegação e Menu Sanduíche à Direita -->
             <div class="header-right-group">
                 <nav class="desktop-nav">
                     <ul>
@@ -48,7 +39,7 @@
                 </div>
             </div>
         </div>
-    </header>
+    
 
     <!-- Fundo Escurecido (Backdrop) -->
     <div class="menu-drawer-backdrop" id="menuBackdrop" onclick="fecharMenuDrawer()"></div>
@@ -60,12 +51,8 @@
             <button class="btn-close-drawer" onclick="fecharMenuDrawer()"><i class="fas fa-times"></i></button>
         </div>
 
-        <!-- Área Dinâmica de Autenticação / Conta -->
-        <div id="drawerAuthContent">
-            <!-- O JavaScript injetará Login/Cadastro ou Minha Conta/Sair aqui -->
-        </div>
+        <div id="drawerAuthContent"></div>
 
-        <!-- Seção de Navegação Completa -->
         <div class="drawer-section">
             <h4>Navegação</h4>
             <ul class="drawer-links">
@@ -78,7 +65,6 @@
             </ul>
         </div>
 
-        <!-- Seção de Aparência / Dark Mode -->
         <div class="drawer-section">
             <h4>Aparência</h4>
             <div class="dark-mode-toggle-box">
@@ -90,7 +76,6 @@
             </div>
         </div>
 
-        <!-- Seção de Acessibilidade -->
         <div class="drawer-section">
             <h4>Acessibilidade</h4>
             <div style="display: flex; gap: 6px; margin-bottom: 8px;">
@@ -103,7 +88,8 @@
             </button>
         </div>
     </aside>
-    </header>
+
+</header>
 
     <main class="container admin-wrapper">
         <div class="admin-header">
@@ -234,8 +220,13 @@
     </main>
 
     <footer>
-        <div class="container">
-            <p>&copy; 2024 - Projeto Integrador IFPR Assis Chateaubriand</p>
+        <<div class="container">
+            <p>&copy; 2024 - IFPR Assis Chateaubriand</p>
+            <div class="footer-links">
+                <a href="ranking.html">Ver Ranking Completo</a>
+                <a href="chat.html">Capiá IA</a>
+                <a href="sobre.html">Sobre</a>
+            </div>
         </div>
     </footer>
 

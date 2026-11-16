@@ -9,21 +9,84 @@
 </head>
 <body>
 
-</div>
+    <!-- Header Principal -->
+    <!-- Header Principal -->
     <header>
         <div class="container">
             <div class="logo">
                 <h1>Paraná Living <span>Score</span></h1>
             </div>
-            <nav>
-                <ul>
-                    <li><a href="index.html">Início</a></li>
-                    <li><a href="perfil.html" class="active">Minha Conta</a></li>
-                    <li><button onclick="logout()" class="btn-view" style="background: #ef4444; margin-left: 15px;">Sair</button></li>
-                </ul>
-            </nav>
+
+            <div class="header-right-group">
+                <nav class="desktop-nav">
+                    <ul>
+                        <li><a href="index.html">Início</a></li>
+                        <li><a href="ranking.html">Ranking</a></li>
+                        <li><a href="cidades.html">Municípios</a></li>
+                        <li><a href="comparar.html">Comparar</a></li>
+                        <li><a href="chat.html">Chat IA</a></li>
+                    </ul>
+                </nav>
+
+                <div class="header-actions">
+                    <button class="btn-hamburger" id="btnHamburger" onclick="abrirMenuDrawer()" title="Menu e Opções">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                </div>
+            </div>
         </div>
-    </header>
+   
+
+    <!-- Fundo Escurecido (Backdrop) -->
+    <div class="menu-drawer-backdrop" id="menuBackdrop" onclick="fecharMenuDrawer()"></div>
+
+    <!-- MENU SANDUÍCHE LATERAL (DRAWER) -->
+    <aside class="menu-drawer" id="menuDrawer">
+        <div class="menu-drawer-header">
+            <h3><i class="fas fa-bars"></i> Menu</h3>
+            <button class="btn-close-drawer" onclick="fecharMenuDrawer()"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div id="drawerAuthContent"></div>
+
+        <div class="drawer-section">
+            <h4>Navegação</h4>
+            <ul class="drawer-links">
+                <li><a href="index.html"><i class="fas fa-home"></i> Início</a></li>
+                <li><a href="ranking.html"><i class="fas fa-trophy"></i> Ranking Oficial</a></li>
+                <li><a href="cidades.html"><i class="fas fa-city"></i> Municípios do Paraná</a></li>
+                <li><a href="comparar.html"><i class="fas fa-balance-scale"></i> Comparador de Cidades</a></li>
+                <li><a href="chat.html"><i class="fas fa-robot"></i> Consultor IA</a></li>
+                <li><a href="sobre.html"><i class="fas fa-info-circle"></i> Sobre o Projeto</a></li>
+            </ul>
+        </div>
+
+        <div class="drawer-section">
+            <h4>Aparência</h4>
+            <div class="dark-mode-toggle-box">
+                <span id="dark-mode-label"><i class="fas fa-moon"></i> Modo Escuro</span>
+                <label class="switch">
+                    <input type="checkbox" id="darkModeSwitch" onchange="alternarModoNoturno()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="drawer-section">
+            <h4>Acessibilidade</h4>
+            <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+                <button class="acc-action-btn" onclick="alterarFonte(10)" title="Aumentar Fonte"><i class="fas fa-font"></i> A+</button>
+                <button class="acc-action-btn" onclick="alterarFonte(-10)" title="Diminuir Fonte"><i class="fas fa-font"></i> A-</button>
+                <button class="acc-action-btn" onclick="resetarFonte()" title="Tamanho Padrão">Padrão</button>
+            </div>
+            <button class="acc-action-btn" onclick="alternarAltoContraste()">
+                <i class="fas fa-adjust"></i> Alternar Alto Contraste
+            </button>
+        </div>
+    </aside>
+</header>
 
     <main class="container">
         <section class="auth-wrapper">
@@ -33,20 +96,17 @@
 
                 <form id="perfilForm">
                     <div class="form-group">
-                        <label>Nome Completo</label>
-                        <i class="fas fa-user"></i>
+                        <label for="perfil-nome">Nome Completo</label>
                         <input type="text" id="perfil-nome" required>
                     </div>
 
                     <div class="form-group">
-                        <label>E-mail</label>
-                        <i class="fas fa-envelope"></i>
+                        <label for="perfil-email">E-mail</label>
                         <input type="email" id="perfil-email" required>
                     </div>
 
                     <div class="form-group">
-                        <label>Nova Senha (deixe em branco para manter)</label>
-                        <i class="fas fa-lock"></i>
+                        <label for="perfil-senha">Nova Senha (deixe em branco para manter)</label>
                         <input type="password" id="perfil-senha" placeholder="••••••••">
                     </div>
 
@@ -58,18 +118,16 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2024 - Projeto Integrador IFPR</p>
+            <p>&copy; 2024 - IFPR Assis Chateaubriand</p>
+            <div class="footer-links">
+                <a href="ranking.html">Ver Ranking Completo</a>
+                <a href="chat.html">Capiá IA</a>
+                <a href="sobre.html">Sobre</a>
+            </div>
         </div>
     </footer>
 
     <script src="script.js"></script>
-    <script>
-        // Função de logout exclusiva desta página ou pode ir para o script.js
-        function logout() {
-            localStorage.clear();
-            window.location.href = 'login.html';
-        }
-    </script>
     <!-- VLibras Oficial -->
     <div vw class="enabled">
         <div vw-access-button class="active"></div>
